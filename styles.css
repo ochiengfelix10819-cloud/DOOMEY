@@ -379,3 +379,13 @@ footer {
 .status-approved { background: #1f7a4d; color: #fff; }
 .status-rejected { background: #7a1f1f; color: #ffc4c4; }
 .reject-note { color: #ff8a80; font-size: 0.85rem; margin-top: 4px; }
+/* ---------- ADMIN ---------- */
+.tabs { display: flex; gap: 8px; margin: 18px 0; flex-wrap: wrap; }
+.tabs button {
+  padding: 8px 18px; border-radius: 20px; cursor: pointer;
+  border: 1px solid var(--copper); background: transparent; color: var(--copper);
+}
+.tabs button.active { background: var(--copper); color: var(--white); }
+.admin-row { align-items: flex-start; }
+.admin-gallery { display: flex; gap: 6px; flex-wrap: wrap; max-width: 220px; }
+.admin-gallery img { width: 64px; height: 64px; object-fit: cover; border-radius: 6px; }
