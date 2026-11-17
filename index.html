@@ -3,37 +3,165 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DOOMEY | Welders & Fabricators Marketplace</title>
-  <style>
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: #1c1c1e;
-      color: #ffffff;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 20px;
-    }
-    h1 {
-      font-size: 3.5rem;
-      letter-spacing: 6px;
-      margin: 0;
-      color: #d9722b;
-    }
-    p {
-      font-size: 1.2rem;
-      color: #cccccc;
-      margin-top: 12px;
-    }
-  </style>
+  <title>DOOMEY | Welders & Fabricators Marketplace in Kenya</title>
+  <meta name="description" content="Discover skilled welders and fabricators in Kenya. Gates, grills, staircases, carports, metal furniture and more.">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>DOOMEY</h1>
-  <p>Discover Skilled Hands. Build Great Things.</p>
-  <p>Coming soon.</p>
+
+  <!-- NAVIGATION -->
+  <header class="navbar">
+    <div class="container nav-inner">
+      <a href="index.html" class="logo">DOOMEY</a>
+      <button class="menu-toggle" id="menuToggle" aria-label="Open menu">&#9776;</button>
+      <nav class="nav-links" id="navLinks">
+        <a href="#categories">Categories</a>
+        <a href="#featured">Products</a>
+        <a href="#fabricators">Find a Welder</a>
+        <a href="#how">How It Works</a>
+        <a href="#">Login</a>
+        <a href="#become" class="btn">Become a Fabricator</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+      <h1>Discover <span>Skilled Hands.</span><br>Build Great Things.</h1>
+      <p>Kenya's marketplace connecting customers with trusted welders and metal fabricators near you.</p>
+      <form class="search-box" onsubmit="event.preventDefault(); alert('Search will work after we connect the database.');">
+        <input type="text" placeholder="Search gates, grills, staircases or a welder...">
+        <button type="submit">Search</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- CATEGORIES -->
+  <section id="categories">
+    <div class="container">
+      <div class="section-title">
+        <h2>Browse Categories</h2>
+        <p>Find exactly the metalwork you need</p>
+      </div>
+      <div class="grid-3">
+        <a href="#" class="card"><div class="card-img">🚪</div><div class="card-body"><h3>Gates and Doors</h3><p>Security and decorative gates</p></div></a>
+        <a href="#" class="card"><div class="card-img">🪟</div><div class="card-body"><h3>Windows and Grills</h3><p>Burglar-proof window grills</p></div></a>
+        <a href="#" class="card"><div class="card-img">🪜</div><div class="card-body"><h3>Staircases and Railings</h3><p>Stairs, balustrades, handrails</p></div></a>
+        <a href="#" class="card"><div class="card-img">🚗</div><div class="card-body"><h3>Carports and Shades</h3><p>Parking and outdoor shelters</p></div></a>
+        <a href="#" class="card"><div class="card-img">🪑</div><div class="card-body"><h3>Metal Furniture</h3><p>Beds, tables, chairs, shelves</p></div></a>
+        <a href="#" class="card"><div class="card-img">🏗️</div><div class="card-body"><h3>Structural Fabrication</h3><p>Frames, trusses, steel structures</p></div></a>
+        <a href="#" class="card"><div class="card-img">🔧</div><div class="card-body"><h3>Custom Welding and Repairs</h3><p>Repairs and one-off jobs</p></div></a>
+        <a href="#" class="card"><div class="card-img">🛢️</div><div class="card-body"><h3>Water Tanks and Tank Stands</h3><p>Strong stands and tank work</p></div></a>
+        <a href="#" class="card"><div class="card-img">🏠</div><div class="card-body"><h3>Metal Roofing</h3><p>Roofing sheets and installation</p></div></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURED PRODUCTS -->
+  <section id="featured" class="alt-bg">
+    <div class="container">
+      <div class="section-title">
+        <h2>Featured Products</h2>
+        <p>Sample listings. Real products will appear here once fabricators start posting.</p>
+      </div>
+      <div class="grid-3">
+        <div class="card"><div class="card-img">🚪</div><div class="card-body"><h3>Sample: Double Steel Gate</h3><p>Nairobi</p><div class="price">KES 45,000</div></div></div>
+        <div class="card"><div class="card-img">🪜</div><div class="card-body"><h3>Sample: Spiral Staircase</h3><p>Kisumu</p><div class="price">KES 120,000</div></div></div>
+        <div class="card"><div class="card-img">🚗</div><div class="card-body"><h3>Sample: Double Carport</h3><p>Mombasa</p><div class="price">KES 85,000</div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- VERIFIED FABRICATORS -->
+  <section id="fabricators">
+    <div class="container">
+      <div class="section-title">
+        <h2>Verified Fabricators</h2>
+        <p>Sample profiles. Verified badges are only given after admin review.</p>
+      </div>
+      <div class="grid-3">
+        <div class="card"><div class="card-img">👷</div><div class="card-body"><h3>Sample Fabricator One</h3><p>Nairobi, Embakasi</p><span class="badge">✔ VERIFIED</span></div></div>
+        <div class="card"><div class="card-img">👷</div><div class="card-body"><h3>Sample Fabricator Two</h3><p>Kisumu, Milimani</p><span class="badge">✔ VERIFIED</span></div></div>
+        <div class="card"><div class="card-img">👷</div><div class="card-body"><h3>Sample Fabricator Three</h3><p>Nakuru, Section 58</p><span class="badge">✔ VERIFIED</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RECENTLY ADDED -->
+  <section class="alt-bg">
+    <div class="container">
+      <div class="section-title">
+        <h2>Recently Added</h2>
+        <p>The newest work from fabricators across Kenya</p>
+      </div>
+      <div class="grid-3">
+        <div class="card"><div class="card-img">🪟</div><div class="card-body"><h3>Sample: Window Grills</h3><p>Eldoret</p><div class="price">KES 6,500</div></div></div>
+        <div class="card"><div class="card-img">🪑</div><div class="card-body"><h3>Sample: Steel Bed Frame</h3><p>Thika</p><div class="price">KES 18,000</div></div></div>
+        <div class="card"><div class="card-img">🛢️</div><div class="card-body"><h3>Sample: Tank Stand</h3><p>Nyeri</p><div class="price">KES 22,000</div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section id="how">
+    <div class="container">
+      <div class="section-title">
+        <h2>How DOOMEY Works</h2>
+        <p>From idea to finished product in four steps</p>
+      </div>
+      <div class="steps">
+        <div class="step"><div class="step-number">1</div><h3>Search</h3><p>Browse products or find a welder in your county.</p></div>
+        <div class="step"><div class="step-number">2</div><h3>Compare</h3><p>View photos, videos, prices and profiles.</p></div>
+        <div class="step"><div class="step-number">3</div><h3>Contact</h3><p>Call, WhatsApp, message or request a quotation.</p></div>
+        <div class="step"><div class="step-number">4</div><h3>Order</h3><p>Place your order and track progress.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BECOME A FABRICATOR -->
+  <section class="cta" id="become">
+    <div class="container">
+      <h2>Are You a Welder or Fabricator?</h2>
+      <p>Showcase your work, reach new customers and grow your business on DOOMEY.</p>
+      <a href="#" class="btn">Become a Fabricator</a>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section>
+    <div class="container">
+      <div class="section-title">
+        <h2>What People Will Say</h2>
+        <p>Placeholder text. Real reviews will replace these after launch.</p>
+      </div>
+      <div class="grid-3">
+        <div class="testimonial"><p>"Placeholder: Customer testimonial will appear here."</p><strong>Sample Customer</strong></div>
+        <div class="testimonial"><p>"Placeholder: Fabricator testimonial will appear here."</p><strong>Sample Fabricator</strong></div>
+        <div class="testimonial"><p>"Placeholder: Another review will appear here."</p><strong>Sample Customer</strong></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div><h4>DOOMEY</h4><p style="color:#b5b5b8">Discover Skilled Hands. Build Great Things.</p></div>
+        <div><h4>Explore</h4><a href="#categories">Categories</a><a href="#featured">Products</a><a href="#fabricators">Find a Welder</a></div>
+        <div><h4>Company</h4><a href="#">About DOOMEY</a><a href="#">Contact Us</a><a href="#become">Become a Fabricator</a></div>
+        <div><h4>Legal</h4><a href="#">Terms and Conditions</a><a href="#">Privacy Policy</a></div>
+      </div>
+      <div class="footer-bottom">&copy; 2026 DOOMEY. All rights reserved.</div>
+    </div>
+  </footer>
+
+  <script>
+    var toggle = document.getElementById('menuToggle');
+    var links = document.getElementById('navLinks');
+    toggle.addEventListener('click', function () {
+      links.classList.toggle('open');
+    });
+  </script>
 </body>
 </html>
