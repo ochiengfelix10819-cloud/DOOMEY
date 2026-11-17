@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verifications | DOOMEY Admin</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="navbar">
+    <div class="container nav-inner">
+      <a href="index.html" class="logo">DOOMEY Admin</a>
+      <nav class="nav-links" style="display:flex">
+        <a href="admin.html">Advertisements</a>
+        <a href="#" id="logoutLink">Log Out</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container dash-wrap">
+    <h2>Fabricator Verification</h2>
+    <div class="tabs" id="tabs">
+      <button type="button" data-status="pending" class="active">Pending</button>
+      <button type="button" data-status="approved">Approved</button>
+      <button type="button" data-status="rejected">Rejected</button>
+    </div>
+    <div id="adminMsg" class="message" style="display:none"></div>
+    <div class="dash-card" id="list">Loading...</div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    var currentStatus = 'pending';
+
+    function note(text, isError) {
+      var b = document.getElementById('adminMsg');
+      b.textContent = text;
+      b.className = 'message ' + (isError ? 'error' : 'success');
+      b.style.display = 'block';
+    }
+
+    async function guard() {
+      var s = await supabaseClient.auth.getSession();
+      if (!s.data.session) { window.location.href = 'login.html'; return false; }
+      var p = await supabaseClient.from('profiles').select('role').eq('id', s.data.session.user.id).single();
+      if (p.error || p.data.role !== 'admin') { window.location.href = 'dashboard.html'; return false; }
+      return true;
+    }
+
+    async function openDoc(path) {
+      var w = window.open('', '_blank');
+      var r = await supabaseClient.storage.from('verification-docs').createSignedUrl(path, 300);
+      if (r.error) { if (w) w.close(); note('Could not open document: ' + r.error.message, true); return; }
+      if (w) w.location.href = r.data.signedUrl;
+    }
+
+    async function decide(id, approve, reason) {
+      var r = await supabaseClient.rpc('review_verification', { req_id: id, approve: approve, reason: reason });
+      if (r.error) { note('Could not save decision: ' + r.error.message, true); return; }
+      note(approve ? 'Fabricator verified.' : 'Application rejected.', false);
+      loadList();
+    }
+
+    function line(parent, label, value) {
+      var d = document.createElement('div');
+      d.textContent = label + ': ' + (value || '-');
+      parent.appendChild(d);
+    }
+
+    async function loadList() {
+      var list = document.getElementById('list');
+      list.textContent = 'Loading...';
+
+      var r = await supabaseClient.from('verification_requests')
+        .select('*').eq('status', currentStatus).order('created_at', { ascending: false });
+      if (r.error) { list.textContent = 'Could not load: ' + r.error.message; return; }
+      if (r.data.length === 0) { list.textContent = 'No ' + currentStatus + ' applications.'; return; }
+
+      var ids = r.data.map(function (x) { return x.fabricator_id; });
+      var f = await supabaseClient.from('fabricator_details').select('id, business_name, county, town').in('id', ids);
+      var pr = await supabaseClient.from('profiles').select('id, phone').in('id', ids);
+      var biz = {}, phones = {};
+      (f.data || []).forEach(function (d) { biz[d.id] = d; });
+      (pr.data || []).forEach(function (d) { phones[d.id] = d.phone; });
+
+      list.innerHTML = '';
+      r.data.forEach(function (v) {
+        var row = document.createElement('div');
+        row.className = 'ad-row admin-row';
+
+        var info = document.createElement('div');
+        info.className = 'ad-info';
+        var b = biz[v.fabricator_id];
+        var t = document.createElement('strong');
+        t.textContent = b ? b.business_name + ' (' + b.town + ', ' + b.county + ')' : 'Unknown business';
+        info.appendChild(t);
+        line(info, 'Legal name', v.legal_name);
+        line(info, 'ID number', v.id_number);
+        line(info, 'KRA PIN', v.kra_pin);
+        line(info, 'Business reg.', v.business_reg_no);
+        line(info, 'Phone', phones[v.fabricator_id]);
+        line(info, 'Submitted', new Date(v.created_at).toLocaleString());
+
+        var docs = document.createElement('div');
+        docs.className = 'ad-actions';
+        docs.style.marginTop = '8px';
+        var d1 = document.createElement('button');
+        d1.type = 'button'; d1.textContent = 'View ID document';
+        d1.addEventListener('click', function () { openDoc(v.id_document_path); });
+        docs.appendChild(d1);
+        if (v.business_document_path) {
+          var d2 = document.createElement('button');
+          d2.type = 'button'; d2.textContent = 'View business proof';
+          d2.addEventListener('click', function () { openDoc(v.business_document_path); });
+          docs.appendChild(d2);
+        }
+        info.appendChild(docs);
+
+        if (v.status === 'rejected' && v.rejection_reason) {
+          var rn = document.createElement('div');
+          rn.className = 'reject-note';
+          rn.textContent = 'Reason: ' + v.rejection_reason;
+          info.appendChild(rn);
+        }
+
+        var actions = document.createElement('div');
+        actions.className = 'ad-actions';
+        if (v.status === 'pending') {
+          var ok = document.createElement('button');
+          ok.type = 'button'; ok.textContent = 'Verify';
+          ok.addEventListener('click', function () {
+            if (confirm('Award the VERIFIED badge to this fabricator?')) decide(v.id, true, null);
+          });
+          var no = document.createElement('button');
+          no.type = 'button'; no.className = 'danger'; no.textContent = 'Reject';
+          no.addEventListener('click', function () {
+            var reason = prompt('Reason shown to the fabricator (required):');
+            if (!reason || reason.trim().length < 3) { note('A reason is required.', true); return; }
+            decide(v.id, false, reason.trim());
+          });
+          actions.appendChild(ok);
+          actions.appendChild(no);
+        }
+
+        row.appendChild(info);
+        row.appendChild(actions);
+        list.appendChild(row);
+      });
+    }
+
+    document.getElementById('tabs').addEventListener('click', function (e) {
+      var b = e.target.closest('button');
+      if (!b) return;
+      currentStatus = b.getAttribute('data-status');
+      Array.from(this.children).forEach(function (c) { c.classList.toggle('active', c === b); });
+      document.getElementById('adminMsg').style.display = 'none';
+      loadList();
+    });
+
+    document.getElementById('logoutLink').addEventListener('click', function (e) {
+      e.preventDefault();
+      logoutUser();
+    });
+
+    guard().then(function (ok) { if (ok) loadList(); });
+  </script>
+</body>
+</html>
