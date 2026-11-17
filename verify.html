@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Get Verified | DOOMEY</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="navbar">
+    <div class="container nav-inner">
+      <a href="index.html" class="logo">DOOMEY</a>
+      <nav class="nav-links" style="display:flex">
+        <a href="dashboard.html">Dashboard</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="auth-wrap">
+    <div class="auth-card wide">
+      <h2>Get Verified</h2>
+      <div id="statusBox"></div>
+      <div id="message" class="message" style="display:none"></div>
+
+      <form id="verifyForm" style="display:none">
+        <p class="auth-sub">Verified fabricators show a VERIFIED badge. Your documents are private. Only DOOMEY administrators can see them.</p>
+
+        <label for="legalName">Full legal name (as on your ID) *</label>
+        <input type="text" id="legalName" maxlength="100" required>
+
+        <label for="idNumber">National ID or passport number *</label>
+        <input type="text" id="idNumber" maxlength="20" required>
+
+        <label for="kraPin">KRA PIN (optional)</label>
+        <input type="text" id="kraPin" maxlength="15" placeholder="e.g. A123456789B">
+
+        <label for="bizReg">Business registration or county permit number (optional)</label>
+        <input type="text" id="bizReg" maxlength="50">
+
+        <label for="idDoc">Photo or scan of your ID * (JPG, PNG, WebP or PDF, max 5 MB)</label>
+        <input type="file" id="idDoc" accept="image/jpeg,image/png,image/webp,application/pdf" required>
+
+        <label for="bizDoc">Proof of business, e.g. permit or workshop photo (optional)</label>
+        <input type="file" id="bizDoc" accept="image/jpeg,image/png,image/webp,application/pdf">
+
+        <button type="submit" class="btn" id="saveBtn">Submit for Verification</button>
+      </form>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    var userId = null;
+    var MAX_BYTES = 5 * 1024 * 1024;
+    var TYPES = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'application/pdf': 'pdf' };
+
+    function box(html) { document.getElementById('statusBox').innerHTML = html; }
+
+    function checkFile(f, label) {
+      if (!f) return null;
+      if (!TYPES[f.type]) return label + ' must be a JPG, PNG, WebP or PDF file.';
+      if (f.size > MAX_BYTES) return label + ' is too large (max 5 MB).';
+      return null;
+    }
+
+    async function init() {
+      var s = await supabaseClient.auth.getSession();
+      if (!s.data.session) { window.location.href = 'login.html'; return; }
+      userId = s.data.session.user.id;
+
+      var prof = await supabaseClient.from('profiles').select('role, is_suspended').eq('id', userId).single();
+      if (prof.error || prof.data.role !== 'fabricator' || prof.data.is_suspended) {
+        window.location.href = 'dashboard.html'; return;
+      }
+      var det = await supabaseClient.from('fabricator_details').select('business_name, is_verified').eq('id', userId).maybeSingle();
+      if (!det.data || !det.data.business_name) { window.location.href = 'dashboard.html'; return; }
+
+      if (det.data.is_verified) {
+        box('<p class="message success">You are already verified. \u2714</p>');
+        return;
+      }
+
+      var req = await supabaseClient.from('verification_requests')
+        .select('status, rejection_reason, created_at')
+        .eq('fabricator_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      var last = req.data && req.data[0];
+      if (last && last.status === 'pending') {
+        box('<p class="message success">Your application is <strong>pending review</strong>. We will update your status once an administrator has checked it.</p>');
+        return;
+      }
+      if (last && last.status === 'rejected') {
+        var p = document.createElement('p');
+        p.className = 'message error';
+        p.textContent = 'Your last application was rejected. Reason: ' + (last.rejection_reason || 'Not given') + '. You can fix this and apply again.';
+        document.getElementById('statusBox').appendChild(p);
+      }
+      document.getElementById('verifyForm').style.display = 'block';
+    }
+
+    document.getElementById('verifyForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var btn = document.getElementById('saveBtn');
+      var label = 'Submit for Verification';
+
+      var legalName = document.getElementById('legalName').value.trim();
+      var idNumber = document.getElementById('idNumber').value.trim();
+      var kra = document.getElementById('kraPin').value.trim().toUpperCase();
+      var biz = document.getElementById('bizReg').value.trim();
+      var idFile = document.getElementById('idDoc').files[0];
+      var bizFile = document.getElementById('bizDoc').files[0];
+
+      if (legalName.length < 3) { showMessage('Please enter your full legal name.', true); return; }
+      if (!/^[A-Za-z0-9]{6,20}$/.test(idNumber)) { showMessage('Enter a valid ID or passport number (letters and numbers only).', true); return; }
+      if (kra && !/^[A-Z]\d{9}[A-Z]$/.test(kra)) { showMessage('KRA PIN looks wrong. It should look like A123456789B.', true); return; }
+      if (!idFile) { showMessage('Please attach a photo or scan of your ID.', true); return; }
+      var err = checkFile(idFile, 'The ID file') || checkFile(bizFile, 'The business file');
+      if (err) { showMessage(err, true); return; }
+
+      setLoading(btn, true, label);
+
+      var requestId = crypto.randomUUID();
+      var idPath = userId + '/' + requestId + '-id.' + TYPES[idFile.type];
+      var bizPath = bizFile ? userId + '/' + requestId + '-business.' + TYPES[bizFile.type] : null;
+
+      var up = await supabaseClient.storage.from('verification-docs').upload(idPath, idFile, { contentType: idFile.type });
+      if (up.error) { setLoading(btn, false, label); showMessage('Upload failed: ' + up.error.message, true); return; }
+
+      if (bizFile) {
+        var up2 = await supabaseClient.storage.from('verification-docs').upload(bizPath, bizFile, { contentType: bizFile.type });
+        if (up2.error) { setLoading(btn, false, label); showMessage('Upload failed: ' + up2.error.message, true); return; }
+      }
+
+      var ins = await supabaseClient.from('verification_requests').insert({
+        id: requestId,
+        fabricator_id: userId,
+        legal_name: legalName,
+        id_number: idNumber,
+        kra_pin: kra || null,
+        business_reg_no: biz || null,
+        id_document_path: idPath,
+        business_document_path: bizPath
+      });
+
+      setLoading(btn, false, label);
+      if (ins.error) { showMessage('Could not submit: ' + ins.error.message, true); return; }
+
+      showMessage('Submitted! Redirecting...', false);
+      setTimeout(function () { window.location.href = 'dashboard.html'; }, 1500);
+    });
+
+    init();
+  </script>
+</body>
+</html>
