@@ -102,7 +102,7 @@
         </div>
         <div class="dash-card">
           <h3>My Advertisements</h3>
-          <p class="auth-sub">Coming in Stage 5: post products with photos and videos.</p>
+          <a href="post-product.html" class="btn" style="margin:6px 0 14px">+ Post a New Product</a> <div id="adsList"></div>
         </div>
         <div class="dash-card">
           <h3>Orders</h3>
@@ -188,7 +188,7 @@
         pill.textContent = 'Not verified yet';
         pill.className = 'pill pill-unverified';
       }
-      show('dashboardView');
+      show('dashboardView');       loadMyAds();
     }
 
     async function loadDashboard() {
@@ -320,7 +320,84 @@
       e.preventDefault();
       logoutUser();
     });
+function mediaPath(url) {
+      var i = url.indexOf('/product-media/');
+      return i === -1 ? null : decodeURIComponent(url.substring(i + 15));
+    }
 
+    async function loadMyAds() {
+      var list = document.getElementById('adsList');
+      list.textContent = 'Loading...';
+      var r = await supabaseClient
+        .from('products')
+        .select('id, title, price_kes, status, rejection_reason, video_url, product_images(image_url, sort_order)')
+        .eq('fabricator_id', currentUserId)
+        .order('created_at', { ascending: false });
+
+      if (r.error) { list.textContent = 'Could not load your ads.'; return; }
+      list.innerHTML = '';
+      if (r.data.length === 0) {
+        list.textContent = 'You have not posted anything yet.';
+        return;
+      }
+
+      r.data.forEach(function (p) {
+        var row = document.createElement('div');
+        row.className = 'ad-row';
+
+        var imgs = (p.product_images || []).sort(function (a, b) { return a.sort_order - b.sort_order; });
+        var thumb = document.createElement('img');
+        thumb.className = 'ad-thumb';
+        thumb.alt = '';
+        if (imgs.length) thumb.src = imgs[0].image_url;
+
+        var info = document.createElement('div');
+        info.className = 'ad-info';
+        var name = document.createElement('strong');
+        name.textContent = p.title;
+        var price = document.createElement('span');
+        price.textContent = 'KES ' + Number(p.price_kes).toLocaleString();
+        var tag = document.createElement('span');
+        tag.className = 'status-tag status-' + p.status;
+        tag.textContent = p.status === 'pending' ? 'Pending Approval' : (p.status === 'approved' ? 'Approved' : 'Rejected');
+        info.appendChild(name);
+        info.appendChild(price);
+        info.appendChild(document.createElement('br'));
+        info.appendChild(tag);
+        if (p.status === 'rejected' && p.rejection_reason) {
+          var note = document.createElement('div');
+          note.className = 'reject-note';
+          note.textContent = 'Reason: ' + p.rejection_reason;
+          info.appendChild(note);
+        }
+
+        var actions = document.createElement('div');
+        actions.className = 'ad-actions';
+        var edit = document.createElement('a');
+        edit.href = 'post-product.html?id=' + p.id;
+        edit.textContent = 'Edit';
+        var del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'danger';
+        del.textContent = 'Delete';
+        del.addEventListener('click', async function () {
+          if (!confirm('Delete "' + p.title + '"? This cannot be undone.')) return;
+          var paths = imgs.map(function (i) { return mediaPath(i.image_url); }).filter(Boolean);
+          if (p.video_url) { var vp = mediaPath(p.video_url); if (vp) paths.push(vp); }
+          if (paths.length) await supabaseClient.storage.from('product-media').remove(paths);
+          var d = await supabaseClient.from('products').delete().eq('id', p.id);
+          if (d.error) { alert('Could not delete: ' + d.error.message); return; }
+          loadMyAds();
+        });
+        actions.appendChild(edit);
+        actions.appendChild(del);
+
+        row.appendChild(thumb);
+        row.appendChild(info);
+        row.appendChild(actions);
+        list.appendChild(row);
+      });
+    }
     fillCounties();
     loadDashboard();
   </script>
