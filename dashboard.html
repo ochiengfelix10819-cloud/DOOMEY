@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard | DOOMEY</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="navbar">
+    <div class="container nav-inner">
+      <a href="index.html" class="logo">DOOMEY</a>
+      <nav class="nav-links" style="display:flex">
+        <a href="#" id="logoutLink">Log Out</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="auth-wrap">
+    <div class="auth-card">
+      <h2 id="welcome">Loading...</h2>
+      <p class="auth-sub" id="roleText"></p>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    document.getElementById('logoutLink').addEventListener('click', function (e) {
+      e.preventDefault();
+      logoutUser();
+    });
+
+    async function loadDashboard() {
+      var sessionResult = await supabaseClient.auth.getSession();
+      if (!sessionResult.data.session) {
+        window.location.href = 'login.html';
+        return;
+      }
+      var userId = sessionResult.data.session.user.id;
+      var profile = await supabaseClient
+        .from('profiles')
+        .select('full_name, role')
+        .eq('id', userId)
+        .single();
+
+      if (profile.error) {
+        document.getElementById('welcome').textContent = 'Could not load your profile.';
+        return;
+      }
+      document.getElementById('welcome').textContent = 'Welcome, ' + profile.data.full_name;
+      document.getElementById('roleText').textContent = 'You are logged in as: ' + profile.data.role;
+    }
+    loadDashboard();
+  </script>
+</body>
+</html>
