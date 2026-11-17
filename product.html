@@ -92,7 +92,7 @@
         var fc = el('div', 'dash-card');
         fc.style.marginTop = '20px';
         fc.appendChild(el('h3', '', 'Sold by'));
-        fc.appendChild(el('strong', '', fab.business_name));
+        var nameLink = el('a', '', fab.business_name);         nameLink.href = 'fabricator.html?id=' + fab.id;         nameLink.style.fontWeight = 'bold';         nameLink.style.color = 'var(--copper)';         fc.appendChild(nameLink);
         if (fab.is_verified) {
           var b = el('span', 'badge', '\u2714 VERIFIED');
           b.style.marginLeft = '8px';
