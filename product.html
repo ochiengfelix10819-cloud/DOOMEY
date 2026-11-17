@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product | DOOMEY</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="navbar">
+    <div class="container nav-inner">
+      <a href="index.html" class="logo">DOOMEY</a>
+      <nav class="nav-links" style="display:flex">
+        <a href="explore.html">Products</a>
+        <a href="login.html">Login</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container dash-wrap">
+    <p><a href="explore.html" style="color:var(--copper)">&larr; Back to products</a></p>
+    <div id="content">Loading...</div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script>
+    function el(tag, cls, text) {
+      var e = document.createElement(tag);
+      if (cls) e.className = cls;
+      if (text !== undefined) e.textContent = text;
+      return e;
+    }
+
+    async function load() {
+      var content = document.getElementById('content');
+      var id = new URLSearchParams(window.location.search).get('id');
+      if (!id) { content.textContent = 'No product selected.'; return; }
+
+      var r = await supabaseClient
+        .from('products')
+        .select('*, product_categories(name), product_images(image_url, sort_order)')
+        .eq('id', id)
+        .eq('status', 'approved')
+        .maybeSingle();
+
+      if (r.error || !r.data) { content.textContent = 'This product is not available.'; return; }
+      var p = r.data;
+      document.title = p.title + ' | DOOMEY';
+
+      var f = await supabaseClient.from('fabricator_details')
+        .select('id, business_name, town, county, area, workshop_address, experience_years, is_verified')
+        .eq('id', p.fabricator_id).maybeSingle();
+      var fab = f.data;
+
+      var imgs = (p.product_images || []).sort(function (a, b) { return a.sort_order - b.sort_order; });
+
+      content.innerHTML = '';
+      var wrap = el('div', 'product-layout');
+
+      // Gallery
+      var gallery = el('div', 'gallery');
+      var main = el('img', 'gallery-main');
+      main.alt = p.title;
+      if (imgs.length) main.src = imgs[0].image_url;
+      gallery.appendChild(main);
+      if (imgs.length > 1) {
+        var thumbs = el('div', 'gallery-thumbs');
+        imgs.forEach(function (i) {
+          var t = el('img');
+          t.src = i.image_url; t.alt = '';
+          t.addEventListener('click', function () { main.src = i.image_url; });
+          thumbs.appendChild(t);
+        });
+        gallery.appendChild(thumbs);
+      }
+      if (p.video_url) {
+        var v = document.createElement('video');
+        v.src = p.video_url; v.controls = true; v.preload = 'metadata';
+        v.className = 'gallery-video';
+        gallery.appendChild(v);
+      }
+
+      // Details
+      var info = el('div', 'product-info');
+      info.appendChild(el('h2', '', p.title));
+      info.appendChild(el('div', 'price', 'KES ' + Number(p.price_kes).toLocaleString()));
+      info.appendChild(el('p', 'auth-sub', p.product_categories ? p.product_categories.name : ''));
+      info.appendChild(el('p', '', p.description || ''));
+
+      if (fab) {
+        var fc = el('div', 'dash-card');
+        fc.style.marginTop = '20px';
+        fc.appendChild(el('h3', '', 'Sold by'));
+        fc.appendChild(el('strong', '', fab.business_name));
+        if (fab.is_verified) {
+          var b = el('span', 'badge', '\u2714 VERIFIED');
+          b.style.marginLeft = '8px';
+          fc.appendChild(b);
+        }
+        fc.appendChild(el('p', '', fab.area + ', ' + fab.town + ', ' + fab.county + ' County'));
+        fc.appendChild(el('p', '', 'Workshop: ' + fab.workshop_address));
+        fc.appendChild(el('p', '', fab.experience_years + ' years of experience'));
+        var note = el('p', 'auth-sub', 'Call, WhatsApp, messages and quotations are coming in the next stages.');
+        fc.appendChild(note);
+        info.appendChild(fc);
+      }
+
+      wrap.appendChild(gallery);
+      wrap.appendChild(info);
+      content.appendChild(wrap);
+    }
+    load();
+  </script>
+</body>
+</html>
