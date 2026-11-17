@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Post a Product | DOOMEY</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="navbar">
+    <div class="container nav-inner">
+      <a href="index.html" class="logo">DOOMEY</a>
+      <nav class="nav-links" style="display:flex">
+        <a href="dashboard.html">Dashboard</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="auth-wrap">
+    <div class="auth-card wide">
+      <h2 id="pageTitle">Post a Product</h2>
+      <p class="auth-sub">New and edited ads are reviewed by DOOMEY before they go public.</p>
+      <div id="message" class="message" style="display:none"></div>
+
+      <form id="productForm">
+        <label for="title">Product title *</label>
+        <input type="text" id="title" maxlength="100" placeholder="e.g. Double steel security gate" required>
+
+        <label for="category">Category *</label>
+        <select id="category" required></select>
+
+        <label for="description">Description *</label>
+        <textarea id="description" rows="5" maxlength="1000" placeholder="Materials, sizes, finish, delivery, how long it takes..." required></textarea>
+
+        <label for="price">Price in KES *</label>
+        <input type="number" id="price" min="1" max="100000000" step="1" required>
+
+        <label>Photos * (up to 6, JPG / PNG / WebP)</label>
+        <div id="photoGrid" class="photo-grid"></div>
+        <input type="file" id="photoInput" accept="image/jpeg,image/png,image/webp" multiple>
+
+        <label for="videoInput">Demonstration video (optional, MP4 or WebM, max 50 MB)</label>
+        <div id="existingVideo" style="display:none">
+          <p class="auth-sub" style="margin-bottom:6px">This ad already has a video.</p>
+          <label style="display:flex;gap:8px;align-items:center;margin:0 0 10px">
+            <input type="checkbox" id="removeVideo" style="width:auto"> Remove current video
+          </label>
+        </div>
+        <input type="file" id="videoInput" accept="video/mp4,video/webm">
+
+        <button type="submit" class="btn" id="saveBtn">Submit for Approval</button>
+      </form>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    var MAX_IMAGES = 6;
+    var MAX_VIDEO_BYTES = 50 * 1024 * 1024;
+    var MAX_IMAGE_INPUT_BYTES = 15 * 1024 * 1024;
+
+    var userId = null;
+    var productId = new URLSearchParams(window.location.search).get('id');
+    var existingImages = [];   // photos already saved: { id, image_url }
+    var removedImages = [];    // existing photos marked for removal
+    var newPhotos = [];        // new photos: { blob, preview }
+    var existingVideoUrl = null;
+
+    function mediaPath(url) {
+      var i = url.indexOf('/product-media/');
+      return i === -1 ? null : decodeURIComponent(url.substring(i + 15));
+    }
+
+    function compressImage(file) {
+      return new Promise(function (resolve, reject) {
+        var img = new Image();
+        var url = URL.createObjectURL(file);
+        img.onload = function () {
+          var scale = Math.min(1, 1280 / Math.max(img.width, img.height));
+          var canvas = document.createElement('canvas');
+          canvas.width = Math.round(img.width * scale);
+          canvas.height = Math.round(img.height * scale);
+          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+          URL.revokeObjectURL(url);
+          canvas.toBlob(function (blob) {
+            if (blob) resolve(blob); else reject(new Error('Could not process ' + file.name));
+          }, 'image/jpeg', 0.8);
+        };
+        img.onerror = function () {
+          URL.revokeObjectURL(url);
+          reject(new Error('Could not read ' + file.name));
+        };
+        img.src = url;
+      });
+    }
+
+    function renderPhotos() {
+      var grid = document.getElementById('photoGrid');
+      grid.innerHTML = '';
+
+      existingImages.forEach(function (img, index) {
+        grid.appendChild(makeThumb(img.image_url, function () {
+          removedImages.push(img);
+          existingImages.splice(index, 1);
+          renderPhotos();
+        }));
+      });
+      newPhotos.forEach(function (p, index) {
+        grid.appendChild(makeThumb(p.preview, function () {
+          URL.revokeObjectURL(p.preview);
+          newPhotos.splice(index, 1);
+          renderPhotos();
+        }));
+      });
+    }
+
+    function makeThumb(src, onRemove) {
+      var box = document.createElement('div');
+      box.className = 'thumb';
+      var img = document.createElement('img');
+      img.src = src;
+      img.alt = 'Product photo';
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = '\u00d7';
+      btn.setAttribute('aria-label', 'Remove photo');
+      btn.addEventListener('click', onRemove);
+      box.appendChild(img);
+      box.appendChild(btn);
+      return box;
+    }
+
+    document.getElementById('photoInput').addEventListener('change', async function (e) {
+      var files = Array.from(e.target.files);
+      e.target.value = '';
+      for (var i = 0; i < files.length; i++) {
+        var f = files[i];
+        if (existingImages.length + newPhotos.length >= MAX_IMAGES) {
+          showMessage('You can add up to ' + MAX_IMAGES + ' photos.', true);
+          break;
+        }
+        if (['image/jpeg', 'image/png', 'image/webp'].indexOf(f.type) === -1) {
+          showMessage(f.name + ' is not a JPG, PNG or WebP image.', true);
+          continue;
+        }
+        if (f.size > MAX_IMAGE_INPUT_BYTES) {
+          showMessage(f.name + ' is too large (max 15 MB).', true);
+          continue;
+        }
+        try {
+          var blob = await compressImage(f);
+          newPhotos.push({ blob: blob, preview: URL.createObjectURL(blob) });
+        } catch (err) {
+          showMessage(err.message, true);
+        }
+      }
+      renderPhotos();
+    });
+
+    document.getElementById('videoInput').addEventListener('change', function (e) {
+      var f = e.target.files[0];
+      if (!f) return;
+      if (['video/mp4', 'video/webm'].indexOf(f.type) === -1) {
+        showMessage('Video must be MP4 or WebM.', true);
+        e.target.value = '';
+      } else if (f.size > MAX_VIDEO_BYTES) {
+        showMessage('Video is too large. Maximum is 50 MB.', true);
+        e.target.value = '';
+      }
+    });
+
+    async function init() {
+      var s = await supabaseClient.auth.getSession();
+      if (!s.data.session) { window.location.href = 'login.html'; return; }
+      userId = s.data.session.user.id;
+
+      var prof = await supabaseClient.from('profiles').select('role, is_suspended').eq('id', userId).single();
+      if (prof.error || prof.data.role !== 'fabricator' || prof.data.is_suspended) {
+        window.location.href = 'dashboard.html';
+        return;
+      }
+      var det = await supabaseClient.from('fabricator_details').select('business_name').eq('id', userId).maybeSingle();
+      if (!det.data || !det.data.business_name) { window.location.href = 'dashboard.html'; return; }
+
+      var cats = await supabaseClient.from('product_categories').select('id, name').order('id');
+      var select = document.getElementById('category');
+      var first = document.createElement('option');
+      first.value = ''; first.textContent = 'Select category';
+      select.appendChild(first);
+      (cats.data || []).forEach(function (c) {
+        var o = document.createElement('option');
+        o.value = c.id; o.textContent = c.name;
+        select.appendChild(o);
+      });
+
+      if (productId) {
+        document.getElementById('pageTitle').textContent = 'Edit Product';
+        document.getElementById('saveBtn').textContent = 'Resubmit for Approval';
+        var p = await supabaseClient
+          .from('products')
+          .select('*, product_images(id, image_url, sort_order)')
+          .eq('id', productId)
+          .eq('fabricator_id', userId)
+          .single();
+        if (p.error) { showMessage('Could not load this product.', true); return; }
+        document.getElementById('title').value = p.data.title;
+        document.getElementById('category').value = p.data.category_id;
+        document.getElementById('description').value = p.data.description || '';
+        document.getElementById('price').value = p.data.price_kes;
+        existingImages = (p.data.product_images || []).sort(function (a, b) { return a.sort_order - b.sort_order; });
+        existingVideoUrl = p.data.video_url;
+        if (existingVideoUrl) document.getElementById('existingVideo').style.display = 'block';
+        renderPhotos();
+      }
+    }
+
+    document.getElementById('productForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var btn = document.getElementById('saveBtn');
+      var label = productId ? 'Resubmit for Approval' : 'Submit for Approval';
+
+      var title = document.getElementById('title').value.trim();
+      var categoryId = parseInt(document.getElementById('category').value, 10);
+      var description = document.getElementById('description').value.trim();
+      var price = parseFloat(document.getElementById('price').value);
+      var videoFile = document.getElementById('videoInput').files[0];
+      var removeVideo = document.getElementById('removeVideo').checked;
+
+      if (title.length < 3) { showMessage('Please enter a product title.', true); return; }
+      if (!categoryId) { showMessage('Please choose a category.', true); return; }
+      if (description.length < 10) { showMessage('Please write a description (at least 10 characters).', true); return; }
+      if (isNaN(price) || price <= 0) { showMessage('Please enter a valid price in KES.', true); return; }
+      if (existingImages.length + newPhotos.length < 1) { showMessage('Please add at least one photo.', true); return; }
+
+      setLoading(btn, true, label);
+
+      var fields = {
+        title: title,
+        category_id: categoryId,
+        description: description,
+        price_kes: price,
+        status: 'pending',
+        rejection_reason: null,
+        updated_at: new Date().toISOString()
+      };
+
+      var res;
+      if (productId) {
+        res = await supabaseClient.from('products').update(fields).eq('id', productId).eq('fabricator_id', userId).select().single();
+      } else {
+        fields.fabricator_id = userId;
+        res = await supabaseClient.from('products').insert(fields).select().single();
+      }
+      if (res.error) {
+        setLoading(btn, false, label);
+        showMessage('Could not save product: ' + res.error.message, true);
+        return;
+      }
+      productId = res.data.id; // so a retry never creates a duplicate
+
+      try {
+        // Upload new photos
+        var order = existingImages.length;
+        for (var i = 0; i < newPhotos.length; i++) {
+          var path = userId + '/' + productId + '/' + Date.now() + '-' + i + '.jpg';
+          var up = await supabaseClient.storage.from('product-media').upload(path, newPhotos[i].blob, { contentType: 'image/jpeg' });
+          if (up.error) throw up.error;
+          var url = supabaseClient.storage.from('product-media').getPublicUrl(path).data.publicUrl;
+          var ins = await supabaseClient.from('product_images').insert({ product_id: productId, image_url: url, sort_order: order + i });
+          if (ins.error) throw ins.error;
+        }
+        newPhotos = [];
+
+        // Remove deleted photos
+        for (var j = 0; j < removedImages.length; j++) {
+          await supabaseClient.from('product_images').delete().eq('id', removedImages[j].id);
+          var rp = mediaPath(removedImages[j].image_url);
+          if (rp) await supabaseClient.storage.from('product-media').remove([rp]);
+        }
+        removedImages = [];
+
+        // Video
+        var newVideoUrl = existingVideoUrl;
+        if (videoFile) {
+          var ext = videoFile.type === 'video/webm' ? 'webm' : 'mp4';
+          var vpath = userId + '/' + productId + '/video-' + Date.now() + '.' + ext;
+          var vup = await supabaseClient.storage.from('product-media').upload(vpath, videoFile, { contentType: videoFile.type });
+          if (vup.error) throw vup.error;
+          newVideoUrl = supabaseClient.storage.from('product-media').getPublicUrl(vpath).data.publicUrl;
+        } else if (removeVideo) {
+          newVideoUrl = null;
+        }
+        if (newVideoUrl !== existingVideoUrl) {
+          var vu = await supabaseClient.from('products').update({ video_url: newVideoUrl, status: 'pending' }).eq('id', productId);
+          if (vu.error) throw vu.error;
+          if (existingVideoUrl) {
+            var oldPath = mediaPath(existingVideoUrl);
+            if (oldPath) await supabaseClient.storage.from('product-media').remove([oldPath]);
+          }
+        }
+      } catch (err) {
+        setLoading(btn, false, 'Try Again');
+        showMessage('Product saved, but a file failed to upload: ' + err.message + '. Press the button to try again.', true);
+        return;
+      }
+
+      showMessage('Submitted! Your ad is now Pending Approval. Redirecting...', false);
+      setTimeout(function () { window.location.href = 'dashboard.html'; }, 1500);
+    });
+
+    init();
+  </script>
+</body>
+</html>
