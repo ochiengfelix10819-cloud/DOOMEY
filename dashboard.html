@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard | DOOMEY</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css">   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 </head>
 <body>
   <header class="navbar">
@@ -76,7 +76,7 @@
         <label for="serviceAreas">Areas where you offer services</label>
         <textarea id="serviceAreas" rows="2" maxlength="300" placeholder="e.g. Nairobi, Kiambu, Machakos"></textarea>
 
-        <button type="submit" class="btn" id="saveBtn">Save Profile</button>
+        <label>Pin your workshop on the map *</label>         <p class="map-hint">Tap or click the map to drop a pin. Drag the pin to adjust it.</p>         <div id="pinMap" class="map-box"></div>          <button type="submit" class="btn" id="saveBtn">Save Profile</button>
       </form>
     </div>
 
@@ -117,7 +117,7 @@
 
   </main>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script src="auth.js"></script>
   <script>
@@ -151,7 +151,7 @@
       return /^(\+254|0)[17]\d{8}$/.test(value.replace(/\s/g, ''));
     }
 
-    function openProfileForm(isEdit) {
+    var pinMap = null, pinMarker = null, pinLat = null, pinLng = null;      function setPin(lat, lng) {       pinLat = lat; pinLng = lng;       if (pinMarker) {         pinMarker.setLatLng([lat, lng]);       } else {         pinMarker = L.marker([lat, lng], { draggable: true }).addTo(pinMap);         pinMarker.on('dragend', function () {           var p = pinMarker.getLatLng();           pinLat = p.lat; pinLng = p.lng;         });       }     }      function initPinMap() {       var startLat = (currentDetails && currentDetails.latitude) ? currentDetails.latitude : -1.286389;       var startLng = (currentDetails && currentDetails.longitude) ? currentDetails.longitude : 36.817223;       var hasPin = !!(currentDetails && currentDetails.latitude);        if (!pinMap) {         pinMap = L.map('pinMap').setView([startLat, startLng], hasPin ? 15 : 6);         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {           maxZoom: 19,           attribution: '&copy; OpenStreetMap contributors'         }).addTo(pinMap);         pinMap.on('click', function (e) { setPin(e.latlng.lat, e.latlng.lng); });       } else {         pinMap.setView([startLat, startLng], hasPin ? 15 : 6);       }       if (hasPin) setPin(startLat, startLng);       setTimeout(function () { pinMap.invalidateSize(); }, 200);     }
       document.getElementById('profileTitle').textContent =
         isEdit ? 'Edit Your Business Profile' : 'Complete Your Business Profile';
       if (currentDetails) {
@@ -166,7 +166,7 @@
         document.getElementById('serviceAreas').value = currentDetails.service_areas || '';
       }
       document.getElementById('phone').value = currentProfile.phone || '';
-      show('profileView');
+      show('profileView');       initPinMap();       initPinMap();
     }
 
     function showDashboard() {
@@ -256,7 +256,7 @@
       if (!validKenyanPhone(whatsapp)) { showMessage('Enter a valid Kenyan WhatsApp number, e.g. 0712345678.', true); return; }
       if (isNaN(experience) || experience < 0 || experience > 60) { showMessage('Experience must be between 0 and 60 years.', true); return; }
       if (!document.getElementById('county').value) { showMessage('Please select your county.', true); return; }
-
+if (pinLat === null) { showMessage('Please tap the map to pin your workshop location.', true); return; }
       setLoading(btn, true, 'Save Profile');
 
       var details = {
@@ -268,7 +268,7 @@
         town: document.getElementById('town').value.trim(),
         area: document.getElementById('area').value.trim(),
         workshop_address: document.getElementById('address').value.trim(),
-        service_areas: document.getElementById('serviceAreas').value.trim()
+        service_areas: document.getElementById('serviceAreas').value.trim(),         latitude: pinLat,         longitude: pinLng
       };
 
       var p = await supabaseClient
