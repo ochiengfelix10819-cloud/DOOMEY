@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Explore Products | DOOMEY</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="navbar">
+    <div class="container nav-inner">
+      <a href="index.html" class="logo">DOOMEY</a>
+      <nav class="nav-links" style="display:flex">
+        <a href="explore.html">Products</a>
+        <a href="login.html">Login</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container dash-wrap">
+    <h2>Explore Products</h2>
+
+    <form id="filters" class="filter-bar">
+      <input type="text" id="q" placeholder="Search products...">
+      <select id="category"></select>
+      <select id="county"></select>
+      <select id="sort">
+        <option value="new">Newest first</option>
+        <option value="low">Price: low to high</option>
+        <option value="high">Price: high to low</option>
+      </select>
+      <button type="submit" class="btn">Search</button>
+    </form>
+
+    <p id="count" class="auth-sub"></p>
+    <div id="grid" class="grid-3">Loading...</div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script>
+    var COUNTIES = ['Baringo','Bomet','Bungoma','Busia','Elgeyo-Marakwet','Embu','Garissa','Homa Bay','Isiolo','Kajiado','Kakamega','Kericho','Kiambu','Kilifi','Kirinyaga','Kisii','Kisumu','Kitui','Kwale','Laikipia','Lamu','Machakos','Makueni','Mandera','Marsabit','Meru','Migori','Mombasa','Murang\'a','Nairobi','Nakuru','Nandi','Narok','Nyamira','Nyandarua','Nyeri','Samburu','Siaya','Taita-Taveta','Tana River','Tharaka-Nithi','Trans Nzoia','Turkana','Uasin Gishu','Vihiga','Wajir','West Pokot'];
+    var params = new URLSearchParams(window.location.search);
+
+    function addOption(select, value, text) {
+      var o = document.createElement('option');
+      o.value = value; o.textContent = text;
+      select.appendChild(o);
+    }
+
+    async function setupFilters() {
+      var countySel = document.getElementById('county');
+      addOption(countySel, '', 'All counties');
+      COUNTIES.forEach(function (c) { addOption(countySel, c, c); });
+
+      var catSel = document.getElementById('category');
+      addOption(catSel, '', 'All categories');
+      var cats = await supabaseClient.from('product_categories').select('id, name, slug').order('id');
+      (cats.data || []).forEach(function (c) {
+        addOption(catSel, c.id, c.name);
+        if (params.get('category') === c.slug) catSel.value = c.id;
+      });
+
+      document.getElementById('q').value = params.get('q') || '';
+    }
+
+    async function loadProducts() {
+      var grid = document.getElementById('grid');
+      grid.textContent = 'Loading...';
+
+      var q = document.getElementById('q').value.trim();
+      var cat = document.getElementById('category').value;
+      var county = document.getElementById('county').value;
+      var sort = document.getElementById('sort').value;
+
+      var query = supabaseClient
+        .from('products')
+        .select('id, title, price_kes, fabricator_id, product_images(image_url, sort_order)')
+        .eq('status', 'approved');
+
+      if (q) query = query.ilike('title', '%' + q + '%');
+      if (cat) query = query.eq('category_id', parseInt(cat, 10));
+
+      if (county) {
+        var inCounty = await supabaseClient.from('fabricator_details').select('id').eq('county', county);
+        var fabIds = (inCounty.data || []).map(function (d) { return d.id; });
+        if (fabIds.length === 0) { showResults([], {}); return; }
+        query = query.in('fabricator_id', fabIds);
+      }
+
+      if (sort === 'low') query = query.order('price_kes', { ascending: true });
+      else if (sort === 'high') query = query.order('price_kes', { ascending: false });
+      else query = query.order('created_at', { ascending: false });
+
+      var r = await query.limit(60);
+      if (r.error) { grid.textContent = 'Could not load products: ' + r.error.message; return; }
+
+      var ids = r.data.map(function (p) { return p.fabricator_id; });
+      var fabs = {};
+      if (ids.length) {
+        var f = await supabaseClient.from('fabricator_details')
+          .select('id, business_name, town, county, is_verified').in('id', ids);
+        (f.data || []).forEach(function (d) { fabs[d.id] = d; });
+      }
+      showResults(r.data, fabs);
+    }
+
+    function showResults(products, fabs) {
+      var grid = document.getElementById('grid');
+      grid.innerHTML = '';
+      document.getElementById('count').textContent =
+        products.length + (products.length === 1 ? ' product found' : ' products found');
+      if (products.length === 0) {
+        grid.textContent = 'No products match your search yet.';
+        return;
+      }
+      products.forEach(function (p) {
+        var imgs = (p.product_images || []).sort(function (a, b) { return a.sort_order - b.sort_order; });
+        var card = document.createElement('a');
+        card.className = 'card';
+        card.href = 'product.html?id=' + p.id;
+
+        var imgBox = document.createElement('div');
+        imgBox.className = 'card-img';
+        if (imgs.length) {
+          var im = document.createElement('img');
+          im.src = imgs[0].image_url; im.alt = p.title; im.loading = 'lazy';
+          imgBox.appendChild(im);
+        }
+
+        var body = document.createElement('div');
+        body.className = 'card-body';
+        var h = document.createElement('h3'); h.textContent = p.title;
+        var fab = fabs[p.fabricator_id];
+        var loc = document.createElement('p');
+        loc.textContent = fab ? fab.business_name + ' | ' + fab.town + ', ' + fab.county : '';
+        var price = document.createElement('div');
+        price.className = 'price';
+        price.textContent = 'KES ' + Number(p.price_kes).toLocaleString();
+        body.appendChild(h); body.appendChild(loc); body.appendChild(price);
+        if (fab && fab.is_verified) {
+          var b = document.createElement('span');
+          b.className = 'badge'; b.textContent = '\u2714 VERIFIED';
+          body.appendChild(b);
+        }
+        card.appendChild(imgBox); card.appendChild(body);
+        grid.appendChild(card);
+      });
+    }
+
+    document.getElementById('filters').addEventListener('submit', function (e) {
+      e.preventDefault();
+      loadProducts();
+    });
+
+    setupFilters().then(loadProducts);
+  </script>
+</body>
+</html>
