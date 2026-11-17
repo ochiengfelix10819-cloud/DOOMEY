@@ -415,3 +415,19 @@ footer {
   .filter-bar input { grid-column: 1 / -1; }
   .product-layout { grid-template-columns: 1fr; }
 }
+/* ---------- MAPS & FIND A WELDER ---------- */
+.map-box { width: 100%; height: 320px; border-radius: 10px; margin: 10px 0; z-index: 0; }
+.map-box.tall { height: 420px; }
+.fab-card { display: block; padding: 18px; }
+.fab-card h3 { margin-bottom: 4px; }
+.fab-card p { color: var(--grey); font-size: 0.95rem; margin-bottom: 4px; }
+.map-hint { color: var(--grey); font-size: 0.85rem; margin-bottom: 6px; }
+.fab-filter { display: grid; grid-template-columns: 2fr 1fr 1fr auto auto; gap: 10px; margin: 20px 0 10px; }
+.fab-filter input, .fab-filter select {
+  padding: 12px; border-radius: 6px; border: 1px solid #4a4a4f;
+  background: var(--charcoal-light); color: var(--white); font-size: 1rem; min-width: 0;
+}
+@media (max-width: 800px) {
+  .fab-filter { grid-template-columns: 1fr 1fr; }
+  .fab-filter input { grid-column: 1 / -1; }
+}
