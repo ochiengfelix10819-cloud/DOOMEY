@@ -217,7 +217,7 @@
         return;
       }
 
-      if (currentProfile.role !== 'fabricator') {
+      if (currentProfile.role === 'admin') {         window.location.href = 'admin.html';         return;       }        if (currentProfile.role !== 'fabricator') {
         document.getElementById('simpleWelcome').textContent = 'Welcome, ' + currentProfile.full_name;
         document.getElementById('simpleRole').textContent =
           'You are logged in as: ' + currentProfile.role + '. Your full dashboard is coming in a later stage.';
