@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Registration | DOOMEY</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="navbar">
+    <div class="container nav-inner">
+      <a href="index.html" class="logo">DOOMEY</a>
+      <nav class="nav-links" style="display:flex">
+        <a href="login.html">Login</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="auth-wrap">
+    <div class="auth-card">
+      <h2>Create a Customer Account</h2>
+      <p class="auth-sub">Find and hire skilled welders and fabricators.</p>
+      <div id="message" class="message" style="display:none"></div>
+      <form id="authForm">
+        <label for="fullName">Full name</label>
+        <input type="text" id="fullName" required>
+        <label for="email">Email</label>
+        <input type="email" id="email" required>
+        <label for="password">Password (at least 8 characters)</label>
+        <input type="password" id="password" required minlength="8">
+        <button type="submit" class="btn">Create Account</button>
+      </form>
+      <p class="auth-switch">Already have an account? <a href="login.html">Log in</a></p>
+      <p class="auth-switch">Are you a welder? <a href="register-fabricator.html">Register as a Fabricator</a></p>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    document.getElementById('authForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      registerUser('customer');
+    });
+  </script>
+</body>
+</html>
