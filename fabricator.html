@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fabricator | DOOMEY</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+</head>
+<body>
+  <header class="navbar">
+    <div class="container nav-inner">
+      <a href="index.html" class="logo">DOOMEY</a>
+      <nav class="nav-links" style="display:flex">
+        <a href="find-welder.html">Find a Welder</a>
+        <a href="login.html">Login</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container dash-wrap">
+    <p><a href="find-welder.html" style="color:var(--copper)">&larr; Back to fabricators</a></p>
+    <div id="content">Loading...</div>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script>
+    function el(tag, cls, text) {
+      var e = document.createElement(tag);
+      if (cls) e.className = cls;
+      if (text !== undefined) e.textContent = text;
+      return e;
+    }
+
+    async function load() {
+      var content = document.getElementById('content');
+      var id = new URLSearchParams(window.location.search).get('id');
+      if (!id) { content.textContent = 'No fabricator selected.'; return; }
+
+      var r = await supabaseClient.from('fabricator_details')
+        .select('id, business_name, skills, experience_years, county, town, area, workshop_address, service_areas, is_verified, latitude, longitude')
+        .eq('id', id).maybeSingle();
+      if (r.error || !r.data || !r.data.business_name) { content.textContent = 'This fabricator was not found.'; return; }
+      var f = r.data;
+      document.title = f.business_name + ' | DOOMEY';
+
+      content.innerHTML = '';
+      var head = el('div', 'dash-header');
+      var left = el('div');
+      left.appendChild(el('h2', '', f.business_name));
+      left.appendChild(el('p', 'auth-sub', f.area + ', ' + f.town + ', ' + f.county + ' County'));
+      head.appendChild(left);
+      if (f.is_verified) head.appendChild(el('span', 'pill pill-verified', '\u2714 VERIFIED'));
+      content.appendChild(head);
+
+      var grid = el('div', 'dash-grid');
+
+      var about = el('div', 'dash-card');
+      about.appendChild(el('h3', '', 'About'));
+      about.appendChild(el('p', '', 'Experience: ' + f.experience_years + ' years'));
+      about.appendChild(el('p', '', 'Skills: ' + f.skills));
+      if (f.service_areas) about.appendChild(el('p', '', 'Serves: ' + f.service_areas));
+      about.appendChild(el('p', '', 'Workshop: ' + f.workshop_address));
+      about.appendChild(el('p', 'auth-sub', 'Call, WhatsApp and messaging are coming in Stage 9.'));
+      grid.appendChild(about);
+
+      if (f.latitude != null && f.longitude != null) {
+        var mapCard = el('div', 'dash-card');
+        mapCard.appendChild(el('h3', '', 'Workshop location'));
+        var mapDiv = el('div', 'map-box');
+        mapCard.appendChild(mapDiv);
+        grid.appendChild(mapCard);
+        content.appendChild(grid);
+
+        var map = L.map(mapDiv).setView([f.latitude, f.longitude], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+        L.marker([f.latitude, f.longitude]).addTo(map);
+      } else {
+        content.appendChild(grid);
+      }
+
+      var title = el('h3', '', 'Products');
+      title.style.margin = '30px 0 14px';
+      content.appendChild(title);
+      var pg = el('div', 'grid-3', 'Loading...');
+      content.appendChild(pg);
+
+      var p = await supabaseClient.from('products')
+        .select('id, title, price_kes, product_images(image_url, sort_order)')
+        .eq('fabricator_id', id).eq('status', 'approved')
+        .order('created_at', { ascending: false });
+
+      pg.innerHTML = '';
+      if (p.error || !p.data.length) { pg.textContent = 'No products posted yet.'; return; }
+      p.data.forEach(function (prod) {
+        var imgs = (prod.product_images || []).sort(function (a, b) { return a.sort_order - b.sort_order; });
+        var card = el('a', 'card');
+        card.href = 'product.html?id=' + prod.id;
+        var box = el('div', 'card-img');
+        if (imgs.length) {
+          var im = el('img'); im.src = imgs[0].image_url; im.alt = prod.title; im.loading = 'lazy';
+          box.appendChild(im);
+        }
+        var body = el('div', 'card-body');
+        body.appendChild(el('h3', '', prod.title));
+        body.appendChild(el('div', 'price', 'KES ' + Number(prod.price_kes).toLocaleString()));
+        card.appendChild(box); card.appendChild(body);
+        pg.appendChild(card);
+      });
+    }
+    load();
+  </script>
+</body>
+</html>
