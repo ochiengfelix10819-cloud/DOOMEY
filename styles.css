@@ -257,3 +257,38 @@ footer {
   .search-box { flex-direction: column; }
   .search-box button { padding: 14px; }
 }
+/* ---------- AUTH PAGES ---------- */
+.auth-wrap {
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+}
+.auth-card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--charcoal-light);
+  border: 1px solid #38383c;
+  border-radius: 12px;
+  padding: 32px;
+}
+.auth-card h2 { margin-bottom: 6px; }
+.auth-sub { color: var(--grey); margin-bottom: 20px; }
+.auth-card label { display: block; margin: 14px 0 6px; font-size: 0.95rem; }
+.auth-card input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #4a4a4f;
+  background: var(--charcoal);
+  color: var(--white);
+  font-size: 1rem;
+}
+.auth-card input:focus { outline: 2px solid var(--copper); }
+.auth-card .btn { width: 100%; margin-top: 22px; }
+.auth-switch { margin-top: 14px; color: var(--grey); font-size: 0.95rem; text-align: center; }
+.auth-switch a { color: var(--copper); }
+.message { padding: 12px; border-radius: 6px; margin-bottom: 10px; font-size: 0.95rem; }
+.message.error { background: #4a1f1f; color: #ffb4b4; }
+.message.success { background: #1f4a2f; color: #b4ffd0; }
