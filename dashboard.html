@@ -16,21 +16,180 @@
     </div>
   </header>
 
-  <main class="auth-wrap">
-    <div class="auth-card">
-      <h2 id="welcome">Loading...</h2>
-      <p class="auth-sub" id="roleText"></p>
+  <main class="container dash-wrap">
+
+    <!-- Loading -->
+    <div id="loadingView" class="auth-card" style="margin:0 auto">
+      <h2>Loading...</h2>
     </div>
+
+    <!-- Simple view for customers and admins -->
+    <div id="simpleView" class="auth-card" style="margin:0 auto; display:none">
+      <h2 id="simpleWelcome"></h2>
+      <p class="auth-sub" id="simpleRole"></p>
+    </div>
+
+    <!-- Fabricator profile form -->
+    <div id="profileView" class="auth-card wide" style="margin:0 auto; display:none">
+      <h2 id="profileTitle">Complete Your Business Profile</h2>
+      <p class="auth-sub">Customers trust fabricators with complete profiles. All fields marked * are required.</p>
+      <div id="message" class="message" style="display:none"></div>
+
+      <form id="profileForm">
+        <label for="businessName">Business name *</label>
+        <input type="text" id="businessName" maxlength="100" required>
+
+        <div class="form-row">
+          <div>
+            <label for="phone">Phone number *</label>
+            <input type="tel" id="phone" placeholder="0712345678" required>
+          </div>
+          <div>
+            <label for="whatsapp">WhatsApp number *</label>
+            <input type="tel" id="whatsapp" placeholder="0712345678" required>
+          </div>
+        </div>
+
+        <label for="skills">Skills and services *</label>
+        <textarea id="skills" rows="3" maxlength="500" placeholder="e.g. Gates, window grills, staircases, arc welding" required></textarea>
+
+        <label for="experience">Years of experience *</label>
+        <input type="number" id="experience" min="0" max="60" required>
+
+        <div class="form-row">
+          <div>
+            <label for="county">County *</label>
+            <select id="county" required></select>
+          </div>
+          <div>
+            <label for="town">Town *</label>
+            <input type="text" id="town" maxlength="80" required>
+          </div>
+        </div>
+
+        <label for="area">Estate or area *</label>
+        <input type="text" id="area" maxlength="100" required>
+
+        <label for="address">Workshop address *</label>
+        <input type="text" id="address" maxlength="200" placeholder="Street, building or landmark" required>
+
+        <label for="serviceAreas">Areas where you offer services</label>
+        <textarea id="serviceAreas" rows="2" maxlength="300" placeholder="e.g. Nairobi, Kiambu, Machakos"></textarea>
+
+        <button type="submit" class="btn" id="saveBtn">Save Profile</button>
+      </form>
+    </div>
+
+    <!-- Fabricator dashboard -->
+    <div id="dashboardView" style="display:none">
+      <div class="dash-header">
+        <div>
+          <h2 id="dashBusiness"></h2>
+          <p class="auth-sub" id="dashOwner" style="margin:0"></p>
+        </div>
+        <span id="verifyPill" class="pill"></span>
+      </div>
+
+      <div class="dash-grid">
+        <div class="dash-card">
+          <h3>Business Profile</h3>
+          <p id="dLocation"></p>
+          <p id="dPhone"></p>
+          <p id="dWhatsapp"></p>
+          <p id="dExperience"></p>
+          <p id="dSkills"></p>
+          <button class="btn btn-outline" id="editProfileBtn" style="margin-top:14px">Edit Profile</button>
+        </div>
+        <div class="dash-card">
+          <h3>My Advertisements</h3>
+          <p class="auth-sub">Coming in Stage 5: post products with photos and videos.</p>
+        </div>
+        <div class="dash-card">
+          <h3>Orders</h3>
+          <p class="auth-sub">Coming in Stage 8: customer orders and quotations.</p>
+        </div>
+        <div class="dash-card">
+          <h3>Messages</h3>
+          <p class="auth-sub">Coming in Stage 9: chat with customers.</p>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script src="auth.js"></script>
   <script>
-    document.getElementById('logoutLink').addEventListener('click', function (e) {
-      e.preventDefault();
-      logoutUser();
-    });
+    var COUNTIES = ['Baringo','Bomet','Bungoma','Busia','Elgeyo-Marakwet','Embu','Garissa','Homa Bay','Isiolo','Kajiado','Kakamega','Kericho','Kiambu','Kilifi','Kirinyaga','Kisii','Kisumu','Kitui','Kwale','Laikipia','Lamu','Machakos','Makueni','Mandera','Marsabit','Meru','Migori','Mombasa','Murang\'a','Nairobi','Nakuru','Nandi','Narok','Nyamira','Nyandarua','Nyeri','Samburu','Siaya','Taita-Taveta','Tana River','Tharaka-Nithi','Trans Nzoia','Turkana','Uasin Gishu','Vihiga','Wajir','West Pokot'];
+
+    var currentUserId = null;
+    var currentProfile = null;
+    var currentDetails = null;
+
+    function show(id) {
+      ['loadingView', 'simpleView', 'profileView', 'dashboardView'].forEach(function (v) {
+        document.getElementById(v).style.display = (v === id) ? 'block' : 'none';
+      });
+    }
+
+    function fillCounties() {
+      var select = document.getElementById('county');
+      var first = document.createElement('option');
+      first.value = '';
+      first.textContent = 'Select county';
+      select.appendChild(first);
+      COUNTIES.forEach(function (c) {
+        var opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = c;
+        select.appendChild(opt);
+      });
+    }
+
+    function validKenyanPhone(value) {
+      return /^(\+254|0)[17]\d{8}$/.test(value.replace(/\s/g, ''));
+    }
+
+    function openProfileForm(isEdit) {
+      document.getElementById('profileTitle').textContent =
+        isEdit ? 'Edit Your Business Profile' : 'Complete Your Business Profile';
+      if (currentDetails) {
+        document.getElementById('businessName').value = currentDetails.business_name || '';
+        document.getElementById('skills').value = currentDetails.skills || '';
+        document.getElementById('experience').value = currentDetails.experience_years == null ? '' : currentDetails.experience_years;
+        document.getElementById('whatsapp').value = currentDetails.whatsapp || '';
+        document.getElementById('county').value = currentDetails.county || '';
+        document.getElementById('town').value = currentDetails.town || '';
+        document.getElementById('area').value = currentDetails.area || '';
+        document.getElementById('address').value = currentDetails.workshop_address || '';
+        document.getElementById('serviceAreas').value = currentDetails.service_areas || '';
+      }
+      document.getElementById('phone').value = currentProfile.phone || '';
+      show('profileView');
+    }
+
+    function showDashboard() {
+      var d = currentDetails;
+      document.getElementById('dashBusiness').textContent = d.business_name;
+      document.getElementById('dashOwner').textContent = 'Owner: ' + currentProfile.full_name;
+      document.getElementById('dLocation').textContent =
+        'Location: ' + d.area + ', ' + d.town + ', ' + d.county + ' County';
+      document.getElementById('dPhone').textContent = 'Phone: ' + (currentProfile.phone || '');
+      document.getElementById('dWhatsapp').textContent = 'WhatsApp: ' + (d.whatsapp || '');
+      document.getElementById('dExperience').textContent = 'Experience: ' + d.experience_years + ' years';
+      document.getElementById('dSkills').textContent = 'Skills: ' + d.skills;
+
+      var pill = document.getElementById('verifyPill');
+      if (d.is_verified) {
+        pill.textContent = '\u2714 VERIFIED';
+        pill.className = 'pill pill-verified';
+      } else {
+        pill.textContent = 'Not verified yet';
+        pill.className = 'pill pill-unverified';
+      }
+      show('dashboardView');
+    }
 
     async function loadDashboard() {
       var sessionResult = await supabaseClient.auth.getSession();
@@ -38,20 +197,131 @@
         window.location.href = 'login.html';
         return;
       }
-      var userId = sessionResult.data.session.user.id;
+      currentUserId = sessionResult.data.session.user.id;
+
       var profile = await supabaseClient
         .from('profiles')
-        .select('full_name, role')
-        .eq('id', userId)
+        .select('full_name, phone, role, is_suspended')
+        .eq('id', currentUserId)
         .single();
 
       if (profile.error) {
-        document.getElementById('welcome').textContent = 'Could not load your profile.';
+        document.getElementById('loadingView').innerHTML = '<h2>Could not load your profile.</h2>';
         return;
       }
-      document.getElementById('welcome').textContent = 'Welcome, ' + profile.data.full_name;
-      document.getElementById('roleText').textContent = 'You are logged in as: ' + profile.data.role;
+      currentProfile = profile.data;
+
+      if (currentProfile.is_suspended) {
+        document.getElementById('loadingView').innerHTML =
+          '<h2>Account suspended</h2><p class="auth-sub">Please contact DOOMEY support.</p>';
+        return;
+      }
+
+      if (currentProfile.role !== 'fabricator') {
+        document.getElementById('simpleWelcome').textContent = 'Welcome, ' + currentProfile.full_name;
+        document.getElementById('simpleRole').textContent =
+          'You are logged in as: ' + currentProfile.role + '. Your full dashboard is coming in a later stage.';
+        show('simpleView');
+        return;
+      }
+
+      var details = await supabaseClient
+        .from('fabricator_details')
+        .select('*')
+        .eq('id', currentUserId)
+        .maybeSingle();
+
+      if (details.error) {
+        document.getElementById('loadingView').innerHTML = '<h2>Could not load your business details.</h2>';
+        return;
+      }
+      currentDetails = details.data;
+
+      if (!currentDetails || !currentDetails.business_name) {
+        openProfileForm(false);
+      } else {
+        showDashboard();
+      }
     }
+
+    document.getElementById('profileForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var btn = document.getElementById('saveBtn');
+
+      var phone = document.getElementById('phone').value.trim();
+      var whatsapp = document.getElementById('whatsapp').value.trim();
+      var experience = parseInt(document.getElementById('experience').value, 10);
+
+      if (!validKenyanPhone(phone)) { showMessage('Enter a valid Kenyan phone number, e.g. 0712345678.', true); return; }
+      if (!validKenyanPhone(whatsapp)) { showMessage('Enter a valid Kenyan WhatsApp number, e.g. 0712345678.', true); return; }
+      if (isNaN(experience) || experience < 0 || experience > 60) { showMessage('Experience must be between 0 and 60 years.', true); return; }
+      if (!document.getElementById('county').value) { showMessage('Please select your county.', true); return; }
+
+      setLoading(btn, true, 'Save Profile');
+
+      var details = {
+        business_name: document.getElementById('businessName').value.trim(),
+        skills: document.getElementById('skills').value.trim(),
+        experience_years: experience,
+        whatsapp: whatsapp.replace(/\s/g, ''),
+        county: document.getElementById('county').value,
+        town: document.getElementById('town').value.trim(),
+        area: document.getElementById('area').value.trim(),
+        workshop_address: document.getElementById('address').value.trim(),
+        service_areas: document.getElementById('serviceAreas').value.trim()
+      };
+
+      var p = await supabaseClient
+        .from('profiles')
+        .update({ phone: phone.replace(/\s/g, '') })
+        .eq('id', currentUserId);
+
+      if (p.error) {
+        setLoading(btn, false, 'Save Profile');
+        showMessage('Could not save phone number: ' + p.error.message, true);
+        return;
+      }
+
+      var result;
+      if (currentDetails) {
+        result = await supabaseClient
+          .from('fabricator_details')
+          .update(details)
+          .eq('id', currentUserId)
+          .select()
+          .single();
+      } else {
+        details.id = currentUserId;
+        result = await supabaseClient
+          .from('fabricator_details')
+          .insert(details)
+          .select()
+          .single();
+      }
+
+      setLoading(btn, false, 'Save Profile');
+
+      if (result.error) {
+        showMessage('Could not save profile: ' + result.error.message, true);
+        return;
+      }
+
+      currentDetails = result.data;
+      currentProfile.phone = phone.replace(/\s/g, '');
+      document.getElementById('message').style.display = 'none';
+      showDashboard();
+    });
+
+    document.getElementById('editProfileBtn').addEventListener('click', function () {
+      openProfileForm(true);
+    });
+
+    document.getElementById('logoutLink').addEventListener('click', function (e) {
+      e.preventDefault();
+      logoutUser();
+    });
+
+    fillCounties();
     loadDashboard();
   </script>
 </body>
