@@ -102,7 +102,6 @@
         fc.appendChild(el('p', '', 'Workshop: ' + fab.workshop_address));
         fc.appendChild(el('p', '', fab.experience_years + ' years of experience'));
         var orderBtn = el('a', 'btn', 'Order This Product');         orderBtn.href = 'order.html?product=' + p.id;         orderBtn.style.marginTop = '12px';         fc.appendChild(orderBtn);         fc.appendChild(el('p', 'auth-sub', 'Call, WhatsApp, messaging and quotations are coming in the next stages.'));
-        fc.appendChild(note);
         info.appendChild(fc);
       }
 
