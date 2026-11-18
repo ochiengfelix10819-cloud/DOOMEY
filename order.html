@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Place an Order | DOOMEY</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="navbar">
+    <div class="container nav-inner">
+      <a href="index.html" class="logo">DOOMEY</a>
+      <nav class="nav-links" style="display:flex">
+        <a href="explore.html">Products</a>
+        <a href="my-orders.html">My Orders</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="auth-wrap">
+    <div class="auth-card wide">
+      <h2>Place an Order</h2>
+      <div id="summary" class="dash-card" style="margin:12px 0">Loading...</div>
+      <div id="message" class="message" style="display:none"></div>
+
+      <form id="orderForm" style="display:none">
+        <label for="qty">Quantity *</label>
+        <input type="number" id="qty" min="1" max="100" value="1" required>
+
+        <label for="phone">Your phone number *</label>
+        <input type="tel" id="phone" placeholder="0712345678" required>
+
+        <label for="location">Delivery or site location *</label>
+        <input type="text" id="location" maxlength="200" placeholder="Town, estate, landmark" required>
+
+        <label for="notes">Notes or measurements (optional)</label>
+        <textarea id="notes" rows="3" maxlength="1000"></textarea>
+
+        <label for="pay">How will you pay the fabricator? *</label>
+        <select id="pay" required>
+          <option value="mpesa">M-Pesa</option>
+          <option value="cash">Cash</option>
+          <option value="bank_transfer">Bank transfer</option>
+        </select>
+
+        <p class="auth-sub" style="margin-top:14px">
+          You pay the fabricator directly. DOOMEY does not collect or hold payments.
+          The final price is confirmed with the fabricator.
+        </p>
+
+        <button type="submit" class="btn" id="saveBtn">Submit Order</button>
+      </form>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    var product = null;
+
+    function validKenyanPhone(v) {
+      return /^(\+254|0)[17]\d{8}$/.test(v.replace(/\s/g, ''));
+    }
+
+    async function init() {
+      var s = await supabaseClient.auth.getSession();
+      if (!s.data.session) { window.location.href = 'login.html'; return; }
+      var uid = s.data.session.user.id;
+
+      var summary = document.getElementById('summary');
+      var prof = await supabaseClient.from('profiles').select('role, phone').eq('id', uid).single();
+      if (prof.error) { summary.textContent = 'Could not load your account.'; return; }
+      if (prof.data.role !== 'customer') {
+        summary.textContent = 'Only customer accounts can place orders. Please log in with a customer account.';
+        return;
+      }
+      if (prof.data.phone) document.getElementById('phone').value = prof.data.phone;
+
+      var id = new URLSearchParams(window.location.search).get('product');
+      if (!id) { summary.textContent = 'No product selected.'; return; }
+
+      var r = await supabaseClient.from('products')
+        .select('id, title, price_kes').eq('id', id).eq('status', 'approved').maybeSingle();
+      if (r.error || !r.data) { summary.textContent = 'This product is not available.'; return; }
+      product = r.data;
+
+      summary.innerHTML = '';
+      var t = document.createElement('strong'); t.textContent = product.title;
+      var p = document.createElement('div'); p.className = 'price';
+      p.textContent = 'KES ' + Number(product.price_kes).toLocaleString() + ' each';
+      summary.appendChild(t); summary.appendChild(p);
+      document.getElementById('orderForm').style.display = 'block';
+    }
+
+    document.getElementById('orderForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var btn = document.getElementById('saveBtn');
+      var qty = parseInt(document.getElementById('qty').value, 10);
+      var phone = document.getElementById('phone').value.trim();
+      var loc = document.getElementById('location').value.trim();
+
+      if (isNaN(qty) || qty < 1 || qty > 100) { showMessage('Quantity must be between 1 and 100.', true); return; }
+      if (!validKenyanPhone(phone)) { showMessage('Enter a valid Kenyan phone number, e.g. 0712345678.', true); return; }
+      if (loc.length < 3) { showMessage('Please enter the delivery or site location.', true); return; }
+
+      setLoading(btn, true, 'Submit Order');
+      var r = await supabaseClient.from('orders').insert({
+        product_id: product.id,
+        quantity: qty,
+        customer_phone: phone.replace(/\s/g, ''),
+        delivery_location: loc,
+        notes: document.getElementById('notes').value.trim() || null,
+        payment_method: document.getElementById('pay').value
+      });
+      setLoading(btn, false, 'Submit Order');
+
+      if (r.error) { showMessage('Could not place order: ' + r.error.message, true); return; }
+      showMessage('Order placed! Redirecting to your orders...', false);
+      setTimeout(function () { window.location.href = 'my-orders.html'; }, 1200);
+    });
+
+    init();
+  </script>
+</body>
+</html>
