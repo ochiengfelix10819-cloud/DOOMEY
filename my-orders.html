@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Orders | DOOMEY</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="navbar">
+    <div class="container nav-inner">
+      <a href="index.html" class="logo">DOOMEY</a>
+      <nav class="nav-links" style="display:flex">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="explore.html">Products</a>
+        <a href="#" id="logoutLink">Log Out</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container dash-wrap">
+    <h2 id="pageTitle">My Orders</h2>
+    <div id="notifBox" class="dash-card" style="display:none;margin:14px 0"></div>
+    <div id="adminMsg" class="message" style="display:none"></div>
+    <p class="auth-sub">Payments are made directly between customer and fabricator. DOOMEY does not hold payments.</p>
+    <div class="dash-card" id="list">Loading...</div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    var uid = null, role = null;
+    var STATUS = { pending: 'Pending', accepted: 'Accepted', in_progress: 'In Progress', completed: 'Completed', cancelled: 'Cancelled' };
+    var PAY = { mpesa: 'M-Pesa', cash: 'Cash', bank_transfer: 'Bank transfer' };
+    var NEXT = {
+      pending: [['accepted', 'Accept']],
+      accepted: [['in_progress', 'Start work']],
+      in_progress: [['completed', 'Mark completed']]
+    };
+
+    function note(text, isError) {
+      var b = document.getElementById('adminMsg');
+      b.textContent = text;
+      b.className = 'message ' + (isError ? 'error' : 'success');
+      b.style.display = 'block';
+    }
+
+    function line(parent, text) {
+      var d = document.createElement('div');
+      d.textContent = text;
+      parent.appendChild(d);
+    }
+
+    async function changeStatus(id, status) {
+      var r = await supabaseClient.from('orders').update({ status: status }).eq('id', id);
+      if (r.error) { note('Could not update: ' + r.error.message, true); return; }
+      note('Order updated.', false);
+      loadOrders();
+    }
+
+    async function loadNotifications() {
+      var r = await supabaseClient.from('notifications')
+        .select('id, message, is_read, created_at')
+        .order('created_at', { ascending: false }).limit(8);
+      if (r.error || !r.data.length) return;
+
+      var box = document.getElementById('notifBox');
+      box.innerHTML = '';
+      var h = document.createElement('h3'); h.textContent = 'Notifications';
+      box.appendChild(h);
+      r.data.forEach(function (n) {
+        var d = document.createElement('div');
+        d.style.padding = '6px 0';
+        d.textContent = (n.is_read ? '' : '\u25CF ') + n.message + '  (' + new Date(n.created_at).toLocaleString() + ')';
+        if (!n.is_read) d.style.fontWeight = 'bold';
+        box.appendChild(d);
+      });
+      box.style.display = 'block';
+
+      await supabaseClient.from('notifications').update({ is_read: true }).eq('user_id', uid).eq('is_read', false);
+    }
+
+    async function loadOrders() {
+      var list = document.getElementById('list');
+      list.textContent = 'Loading...';
+
+      var q = supabaseClient.from('orders').select('*').order('created_at', { ascending: false });
+      q = (role === 'fabricator') ? q.eq('fabricator_id', uid) : q.eq('customer_id', uid);
+      var r = await q;
+      if (r.error) { list.textContent = 'Could not load orders: ' + r.error.message; return; }
+      if (!r.data.length) {
+        list.textContent = role === 'fabricator' ? 'No orders yet.' : 'You have not placed any orders yet.';
+        return;
+      }
+
+      var fabNames = {};
+      if (role === 'customer') {
+        var ids = r.data.map(function (o) { return o.fabricator_id; });
+        var f = await supabaseClient.from('fabricator_details').select('id, business_name').in('id', ids);
+        (f.data || []).forEach(function (d) { fabNames[d.id] = d.business_name; });
+      }
+
+      list.innerHTML = '';
+      r.data.forEach(function (o) {
+        var row = document.createElement('div');
+        row.className = 'ad-row admin-row';
+
+        var info = document.createElement('div');
+        info.className = 'ad-info';
+        var t = document.createElement('strong');
+        t.textContent = o.product_title + ' x ' + o.quantity;
+        info.appendChild(t);
+        line(info, 'Total: KES ' + (Number(o.unit_price_kes) * o.quantity).toLocaleString());
+        line(info, 'Payment method: ' + PAY[o.payment_method]);
+        line(info, 'Location: ' + o.delivery_location);
+        if (role === 'fabricator') {
+          line(info, 'Customer: ' + (o.customer_name || '-'));
+          var ph = document.createElement('div');
+          ph.appendChild(document.createTextNode('Phone: '));
+          var a = document.createElement('a');
+          a.href = 'tel:' + o.customer_phone;
+          a.textContent = o.customer_phone;
+          a.style.color = 'var(--copper)';
+          ph.appendChild(a);
+          info.appendChild(ph);
+        } else {
+          line(info, 'Fabricator: ' + (fabNames[o.fabricator_id] || '-'));
+        }
+        if (o.notes) line(info, 'Notes: ' + o.notes);
+        line(info, 'Ordered: ' + new Date(o.created_at).toLocaleString());
+        var tag = document.createElement('span');
+        tag.className = 'status-tag status-' + o.status;
+        tag.textContent = STATUS[o.status];
+        info.appendChild(tag);
+
+        var actions = document.createElement('div');
+        actions.className = 'ad-actions';
+
+        if (role === 'fabricator') {
+          (NEXT[o.status] || []).forEach(function (n) {
+            var b = document.createElement('button');
+            b.type = 'button'; b.textContent = n[1];
+            b.addEventListener('click', function () { changeStatus(o.id, n[0]); });
+            actions.appendChild(b);
+          });
+          if (o.status === 'pending' || o.status === 'accepted' || o.status === 'in_progress') {
+            var c = document.createElement('button');
+            c.type = 'button'; c.className = 'danger';
+            c.textContent = o.status === 'pending' ? 'Decline' : 'Cancel';
+            c.addEventListener('click', function () {
+              if (confirm('Cancel this order?')) changeStatus(o.id, 'cancelled');
+            });
+            actions.appendChild(c);
+          }
+        } else if (o.status === 'pending') {
+          var cc = document.createElement('button');
+          cc.type = 'button'; cc.className = 'danger'; cc.textContent = 'Cancel order';
+          cc.addEventListener('click', function () {
+            if (confirm('Cancel this order?')) changeStatus(o.id, 'cancelled');
+          });
+          actions.appendChild(cc);
+        }
+
+        row.appendChild(info);
+        row.appendChild(actions);
+        list.appendChild(row);
+      });
+    }
+
+    async function init() {
+      var s = await supabaseClient.auth.getSession();
+      if (!s.data.session) { window.location.href = 'login.html'; return; }
+      uid = s.data.session.user.id;
+      var p = await supabaseClient.from('profiles').select('role').eq('id', uid).single();
+      if (p.error) { document.getElementById('list').textContent = 'Could not load your account.'; return; }
+      role = p.data.role;
+      if (role === 'admin') { window.location.href = 'admin.html'; return; }
+      if (role === 'fabricator') document.getElementById('pageTitle').textContent = 'Incoming Orders';
+      await loadNotifications();
+      loadOrders();
+    }
+
+    document.getElementById('logoutLink').addEventListener('click', function (e) {
+      e.preventDefault();
+      logoutUser();
+    });
+
+    init();
+  </script>
+</body>
+</html>
