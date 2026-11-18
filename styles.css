@@ -431,3 +431,8 @@ footer {
   .fab-filter { grid-template-columns: 1fr 1fr; }
   .fab-filter input { grid-column: 1 / -1; }
 }
+/* ---------- ORDER STATUSES ---------- */
+.status-accepted { background: #1f4a7a; color: #cfe4ff; }
+.status-in_progress { background: #7a4a1f; color: #ffd9b3; }
+.status-completed { background: #1f7a4d; color: #fff; }
+.status-cancelled { background: #4a4a4f; color: #ccc; }
