@@ -65,7 +65,7 @@
       about.appendChild(el('p', '', 'Skills: ' + f.skills));
       if (f.service_areas) about.appendChild(el('p', '', 'Serves: ' + f.service_areas));
       about.appendChild(el('p', '', 'Workshop: ' + f.workshop_address));
-      about.appendChild(el('p', 'auth-sub', 'Call, WhatsApp and messaging are coming in Stage 9.'));
+      var quoteBtn = el('a', 'btn', 'Request a Quotation');       quoteBtn.href = 'request-quote.html?fabricator=' + f.id;       quoteBtn.style.marginTop = '10px';       about.appendChild(quoteBtn);       about.appendChild(el('p', 'auth-sub', 'Call, WhatsApp and messaging are coming in Stage 9.'));
       grid.appendChild(about);
 
       if (f.latitude != null && f.longitude != null) {
