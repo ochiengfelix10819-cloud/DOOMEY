@@ -112,7 +112,7 @@
       markers.clearLayers();
       document.getElementById('count').textContent =
         list.length + (list.length === 1 ? ' fabricator found' : ' fabricators found');
-      if (list.length === 0) { grid.textContent = 'No fabricators match your search yet.'; return; }
+      if (list.length === 0) { grid.innerHTML = '<div class="empty-state"><div class="empty-icon">\uD83D\uDC77</div><h3>No fabricators found</h3><p>Try another county or town, or clear the search.</p><a href="find-welder.html" class="btn">Clear filters</a></div>'; return; }
 
       var points = [];
       list.forEach(function (f) {
