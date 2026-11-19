@@ -5,18 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DOOMEY | Welders & Fabricators Marketplace in Kenya</title>
   <meta name="description" content="Find skilled welders and metal fabricators in Kenya. Gates, grills, staircases, carports, metal furniture and more.">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-  <!-- NAVIGATION -->
   <header class="navbar">
     <div class="container nav-inner">
       <a href="index.html" class="logo">DOOMEY</a>
       <button class="menu-toggle" id="menuToggle" aria-label="Open menu">&#9776;</button>
       <nav class="nav-links" id="navLinks">
         <a href="#categories">Categories</a>
-        <a href="#featured">Products</a>
+        <a href="explore.html">Products</a>
         <a href="find-welder.html">Find a Welder</a>
         <a href="#how">How It Works</a>
         <a href="login.html">Login</a>
@@ -25,19 +25,17 @@
     </div>
   </header>
 
-  <!-- HERO -->
   <section class="hero">
     <div class="container">
       <h1>Discover <span>Skilled Hands.</span><br>Build Great Things.</h1>
       <p>Kenya's marketplace connecting customers with trusted welders and metal fabricators near you.</p>
-     <form class="search-box" action="explore.html" method="get">
+      <form class="search-box" action="explore.html" method="get">
         <input type="text" name="q" placeholder="Search gates, grills, staircases or a welder...">
         <button type="submit">Search</button>
       </form>
     </div>
   </section>
 
-  <!-- CATEGORIES -->
   <section id="categories">
     <div class="container">
       <div class="section-title">
@@ -45,7 +43,7 @@
         <p>Find exactly the metalwork you need</p>
       </div>
       <div class="grid-3">
-       <a href="explore.html?category=gates-and-doors" class="card"><div class="card-img">🚪</div><div class="card-body"><h3>Gates and Doors</h3><p>Security and decorative gates</p></div></a>
+        <a href="explore.html?category=gates-and-doors" class="card"><div class="card-img">🚪</div><div class="card-body"><h3>Gates and Doors</h3><p>Security and decorative gates</p></div></a>
         <a href="explore.html?category=windows-and-grills" class="card"><div class="card-img">🪟</div><div class="card-body"><h3>Windows and Grills</h3><p>Burglar-proof window grills</p></div></a>
         <a href="explore.html?category=staircases-and-railings" class="card"><div class="card-img">🪜</div><div class="card-body"><h3>Staircases and Railings</h3><p>Stairs, balustrades, handrails</p></div></a>
         <a href="explore.html?category=carports-and-shades" class="card"><div class="card-img">🚗</div><div class="card-body"><h3>Carports and Shades</h3><p>Parking and outdoor shelters</p></div></a>
@@ -58,52 +56,36 @@
     </div>
   </section>
 
-  <!-- FEATURED PRODUCTS -->
   <section id="featured" class="alt-bg">
     <div class="container">
       <div class="section-title">
         <h2>Featured Products</h2>
-        <p>Sample listings. Real products will appear here once fabricators start posting.</p>
+        <p>Work from verified fabricators</p>
       </div>
-      <div class="grid-3">
-        <div class="card"><div class="card-img">🚪</div><div class="card-body"><h3>Sample: Double Steel Gate</h3><p>Nairobi</p><div class="price">KES 45,000</div></div></div>
-        <div class="card"><div class="card-img">🪜</div><div class="card-body"><h3>Sample: Spiral Staircase</h3><p>Kisumu</p><div class="price">KES 120,000</div></div></div>
-        <div class="card"><div class="card-img">🚗</div><div class="card-body"><h3>Sample: Double Carport</h3><p>Mombasa</p><div class="price">KES 85,000</div></div></div>
-      </div>
+      <div class="grid-3" id="featuredGrid">Loading...</div>
     </div>
   </section>
 
-  <!-- VERIFIED FABRICATORS -->
   <section id="fabricators">
     <div class="container">
       <div class="section-title">
         <h2>Verified Fabricators</h2>
-        <p>Sample profiles. Verified badges are only given after admin review.</p>
+        <p>Identity checked by the DOOMEY team</p>
       </div>
-      <div class="grid-3">
-        <div class="card"><div class="card-img">👷</div><div class="card-body"><h3>Sample Fabricator One</h3><p>Nairobi, Embakasi</p><span class="badge">✔ VERIFIED</span></div></div>
-        <div class="card"><div class="card-img">👷</div><div class="card-body"><h3>Sample Fabricator Two</h3><p>Kisumu, Milimani</p><span class="badge">✔ VERIFIED</span></div></div>
-        <div class="card"><div class="card-img">👷</div><div class="card-body"><h3>Sample Fabricator Three</h3><p>Nakuru, Section 58</p><span class="badge">✔ VERIFIED</span></div></div>
-      </div>
+      <div class="grid-3" id="fabGrid">Loading...</div>
     </div>
   </section>
 
-  <!-- RECENTLY ADDED -->
-  <section class="alt-bg">
+  <section id="recent" class="alt-bg">
     <div class="container">
       <div class="section-title">
         <h2>Recently Added</h2>
         <p>The newest work from fabricators across Kenya</p>
       </div>
-      <div class="grid-3">
-        <div class="card"><div class="card-img">🪟</div><div class="card-body"><h3>Sample: Window Grills</h3><p>Eldoret</p><div class="price">KES 6,500</div></div></div>
-        <div class="card"><div class="card-img">🪑</div><div class="card-body"><h3>Sample: Steel Bed Frame</h3><p>Thika</p><div class="price">KES 18,000</div></div></div>
-        <div class="card"><div class="card-img">🛢️</div><div class="card-body"><h3>Sample: Tank Stand</h3><p>Nyeri</p><div class="price">KES 22,000</div></div></div>
-      </div>
+      <div class="grid-3" id="recentGrid">Loading...</div>
     </div>
   </section>
 
-  <!-- HOW IT WORKS -->
   <section id="how">
     <div class="container">
       <div class="section-title">
@@ -119,7 +101,6 @@
     </div>
   </section>
 
-  <!-- BECOME A FABRICATOR -->
   <section class="cta" id="become">
     <div class="container">
       <h2>Are You a Welder or Fabricator?</h2>
@@ -128,40 +109,137 @@
     </div>
   </section>
 
-  <!-- TESTIMONIALS -->
-  <section>
-    <div class="container">
-      <div class="section-title">
-        <h2>What People Will Say</h2>
-        <p>Placeholder text. Real reviews will replace these after launch.</p>
-      </div>
-      <div class="grid-3">
-        <div class="testimonial"><p>"Placeholder: Customer testimonial will appear here."</p><strong>Sample Customer</strong></div>
-        <div class="testimonial"><p>"Placeholder: Fabricator testimonial will appear here."</p><strong>Sample Fabricator</strong></div>
-        <div class="testimonial"><p>"Placeholder: Another review will appear here."</p><strong>Sample Customer</strong></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FOOTER -->
   <footer>
     <div class="container">
       <div class="footer-grid">
         <div><h4>DOOMEY</h4><p style="color:#b5b5b8">Discover Skilled Hands. Build Great Things.</p></div>
-        <div><h4>Explore</h4><a href="#categories">Categories</a><a href="explore.html">Products</a><a href="#fabricators">Find a Welder</a></div>
-        <div><h4>Company</h4><a href="#">About DOOMEY</a><a href="#">Contact Us</a><a href="#become">Become a Fabricator</a></div>
+        <div><h4>Explore</h4><a href="#categories">Categories</a><a href="explore.html">Products</a><a href="find-welder.html">Find a Welder</a></div>
+        <div><h4>Company</h4><a href="#">About DOOMEY</a><a href="#">Contact Us</a><a href="register-fabricator.html">Become a Fabricator</a></div>
         <div><h4>Legal</h4><a href="#">Terms and Conditions</a><a href="#">Privacy Policy</a></div>
       </div>
       <div class="footer-bottom">&copy; 2026 DOOMEY. All rights reserved.</div>
     </div>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
   <script>
     var toggle = document.getElementById('menuToggle');
     var links = document.getElementById('navLinks');
     toggle.addEventListener('click', function () {
       links.classList.toggle('open');
     });
+
+    function el(tag, cls, text) {
+      var e = document.createElement(tag);
+      if (cls) e.className = cls;
+      if (text !== undefined) e.textContent = text;
+      return e;
+    }
+
+    function emptyState(grid, icon, title, text, btnText, btnHref) {
+      grid.innerHTML = '';
+      var box = el('div', 'empty-state');
+      box.appendChild(el('div', 'empty-icon', icon));
+      box.appendChild(el('h3', '', title));
+      box.appendChild(el('p', '', text));
+      if (btnText) {
+        var b = el('a', 'btn', btnText);
+        b.href = btnHref;
+        box.appendChild(b);
+      }
+      grid.appendChild(box);
+    }
+
+    function productCard(p, fab) {
+      var imgs = (p.product_images || []).sort(function (a, b) { return a.sort_order - b.sort_order; });
+      var card = el('a', 'card');
+      card.href = 'product.html?id=' + p.id;
+      var box = el('div', 'card-img');
+      if (imgs.length) {
+        var im = el('img');
+        im.src = imgs[0].image_url; im.alt = p.title; im.loading = 'lazy';
+        box.appendChild(im);
+      } else {
+        box.textContent = '\uD83D\uDEE0\uFE0F';
+      }
+      var body = el('div', 'card-body');
+      body.appendChild(el('h3', '', p.title));
+      if (fab) body.appendChild(el('p', '', fab.town + ', ' + fab.county));
+      body.appendChild(el('div', 'price', 'KES ' + Number(p.price_kes).toLocaleString()));
+      if (fab && fab.is_verified) body.appendChild(el('span', 'badge', '\u2714 VERIFIED'));
+      card.appendChild(box);
+      card.appendChild(body);
+      return card;
+    }
+
+    async function loadHome() {
+      var featuredGrid = document.getElementById('featuredGrid');
+      var fabGrid = document.getElementById('fabGrid');
+      var recentGrid = document.getElementById('recentGrid');
+
+      var pr = await supabaseClient
+        .from('products')
+        .select('id, title, price_kes, fabricator_id, product_images(image_url, sort_order)')
+        .eq('status', 'approved')
+        .order('created_at', { ascending: false })
+        .limit(30);
+
+      var products = pr.error ? [] : pr.data;
+      var fabs = {};
+      if (products.length) {
+        var ids = products.map(function (p) { return p.fabricator_id; });
+        var f = await supabaseClient.from('fabricator_details')
+          .select('id, business_name, town, county, is_verified').in('id', ids);
+        (f.data || []).forEach(function (d) { fabs[d.id] = d; });
+      }
+
+      // Recently added: newest 6
+      if (products.length === 0) {
+        emptyState(recentGrid, '\uD83D\uDD28', 'No products yet',
+          'Fabricators are getting set up. Check back soon, or be the first to post your work.',
+          'Become a Fabricator', 'register-fabricator.html');
+      } else {
+        recentGrid.innerHTML = '';
+        products.slice(0, 6).forEach(function (p) { recentGrid.appendChild(productCard(p, fabs[p.fabricator_id])); });
+      }
+
+      // Featured: products from verified fabricators
+      var featured = products.filter(function (p) { return fabs[p.fabricator_id] && fabs[p.fabricator_id].is_verified; });
+      if (featured.length === 0) {
+        emptyState(featuredGrid, '\u2B50', 'Featured products will appear here',
+          'Products from verified fabricators are featured once they are available.');
+      } else {
+        featuredGrid.innerHTML = '';
+        featured.slice(0, 3).forEach(function (p) { featuredGrid.appendChild(productCard(p, fabs[p.fabricator_id])); });
+      }
+
+      // Verified fabricators
+      var vf = await supabaseClient.from('fabricator_details')
+        .select('id, business_name, town, county, area, experience_years')
+        .eq('is_verified', true)
+        .not('business_name', 'is', null)
+        .limit(6);
+
+      if (vf.error || vf.data.length === 0) {
+        emptyState(fabGrid, '\uD83D\uDEE1\uFE0F', 'No verified fabricators yet',
+          'Fabricators who pass our identity check will be listed here.',
+          'Find a Welder', 'find-welder.html');
+      } else {
+        fabGrid.innerHTML = '';
+        vf.data.forEach(function (d) {
+          var card = el('a', 'card fab-card');
+          card.href = 'fabricator.html?id=' + d.id;
+          card.appendChild(el('h3', '', d.business_name));
+          card.appendChild(el('p', '', d.area + ', ' + d.town + ', ' + d.county));
+          card.appendChild(el('p', '', d.experience_years + ' years of experience'));
+          card.appendChild(el('span', 'badge', '\u2714 VERIFIED'));
+          fabGrid.appendChild(card);
+        });
+      }
+    }
+
+    loadHome();
   </script>
 </body>
 </html>
