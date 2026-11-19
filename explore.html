@@ -113,7 +113,7 @@
       document.getElementById('count').textContent =
         products.length + (products.length === 1 ? ' product found' : ' products found');
       if (products.length === 0) {
-        grid.textContent = 'No products match your search yet.';
+        grid.innerHTML = '<div class="empty-state"><div class="empty-icon">\uD83D\uDD0D</div><h3>No products found</h3><p>Try a different search, category or county.</p><a href="explore.html" class="btn">Clear filters</a></div>';
         return;
       }
       products.forEach(function (p) {
