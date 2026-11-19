@@ -92,7 +92,7 @@
       var r = await q;
       if (r.error) { list.textContent = 'Could not load orders: ' + r.error.message; return; }
       if (!r.data.length) {
-        list.textContent = role === 'fabricator' ? 'No orders yet.' : 'You have not placed any orders yet.';
+        list.innerHTML = role === 'fabricator'           ? '<div class="empty-state"><div class="empty-icon">\uD83D\uDCE6</div><h3>No orders yet</h3><p>New customer orders will appear here.</p></div>'           : '<div class="empty-state"><div class="empty-icon">\uD83D\uDCE6</div><h3>No orders yet</h3><p>When you order a product, you can track it here.</p><a href="explore.html" class="btn">Browse products</a></div>';
         return;
       }
 
