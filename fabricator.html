@@ -27,7 +27,7 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js"></script>
+  <script src="supabase-config.js"></script>   <script src="contact.js"></script>   <script src="contact.js"></script>
   <script>
     function el(tag, cls, text) {
       var e = document.createElement(tag);
@@ -65,7 +65,7 @@
       about.appendChild(el('p', '', 'Skills: ' + f.skills));
       if (f.service_areas) about.appendChild(el('p', '', 'Serves: ' + f.service_areas));
       about.appendChild(el('p', '', 'Workshop: ' + f.workshop_address));
-      var quoteBtn = el('a', 'btn', 'Request a Quotation');       quoteBtn.href = 'request-quote.html?fabricator=' + f.id;       quoteBtn.style.marginTop = '10px';       about.appendChild(quoteBtn);       about.appendChild(el('p', 'auth-sub', 'Call, WhatsApp and messaging are coming in Stage 9.'));
+      var quoteBtn = el('a', 'btn', 'Request a Quotation');       quoteBtn.href = 'request-quote.html?fabricator=' + f.id;       quoteBtn.style.marginTop = '10px';       about.appendChild(quoteBtn);       addContactButtons(about, f.id);
       grid.appendChild(about);
 
       if (f.latitude != null && f.longitude != null) {
