@@ -480,3 +480,12 @@ h1, h2, h3, p, a, span, div, strong, label {
 .empty-state h3 { color: var(--white); margin-bottom: 6px; }
 .empty-state p { margin-bottom: 14px; }
 .empty-state .btn { margin-top: 4px; }
+/* ---------- CONTENT PAGES ---------- */
+.prose { max-width: 800px; margin: 0 auto; padding: 40px 0; }
+.prose h1 { margin-bottom: 8px; }
+.prose h2 { color: var(--copper); margin: 28px 0 8px; font-size: 1.3rem; }
+.prose p, .prose li { color: #d6d6d8; margin-bottom: 10px; }
+.prose ul { padding-left: 22px; margin-bottom: 10px; }
+.prose a { color: var(--copper); }
+.prose .updated { color: var(--grey); font-size: 0.9rem; }
+.contact-card { margin: 14px 0; }
