@@ -25,7 +25,7 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js"></script>
+  <script src="supabase-config.js"></script>   <script src="contact.js"></script>
   <script>
     function el(tag, cls, text) {
       var e = document.createElement(tag);
@@ -103,8 +103,7 @@
         fc.appendChild(el('p', '', fab.area + ', ' + fab.town + ', ' + fab.county + ' County'));
         fc.appendChild(el('p', '', 'Workshop: ' + fab.workshop_address));
         fc.appendChild(el('p', '', fab.experience_years + ' years of experience'));
-        var orderBtn = el('a', 'btn', 'Order This Product');         orderBtn.href = 'order.html?product=' + p.id;         orderBtn.style.marginTop = '12px';         fc.appendChild(orderBtn);         var quoteBtn = el('a', 'btn btn-outline', 'Request a Quotation');         quoteBtn.href = 'request-quote.html?fabricator=' + fab.id;         quoteBtn.style.margin = '12px 0 0 8px';         fc.appendChild(quoteBtn);         fc.appendChild(el('p', 'auth-sub', 'Call, WhatsApp, messaging and quotations are coming in the next stages.'));
-        info.appendChild(fc);
+        var orderBtn = el('a', 'btn', 'Order This Product');         orderBtn.href = 'order.html?product=' + p.id;         orderBtn.style.marginTop = '12px';         fc.appendChild(orderBtn);         var quoteBtn = el('a', 'btn btn-outline', 'Request a Quotation');         quoteBtn.href = 'request-quote.html?fabricator=' + fab.id;         quoteBtn.style.margin = '12px 0 0 8px';         fc.appendChild(quoteBtn);         addContactButtons(fc, fab.id);        
       }
 
       wrap.appendChild(gallery);
