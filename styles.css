@@ -436,3 +436,34 @@ footer {
 .status-in_progress { background: #7a4a1f; color: #ffd9b3; }
 .status-completed { background: #1f7a4d; color: #fff; }
 .status-cancelled { background: #4a4a4f; color: #ccc; }
+/* ---------- NO HORIZONTAL SCROLL ---------- */
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-x: clip; /* modern browsers: clips without breaking the sticky menu bar */
+}
+
+img, video, iframe, canvas, svg { max-width: 100%; }
+
+/* Let grid and flex children shrink instead of pushing the page wider */
+.grid-3 > *, .dash-grid > *, .form-row > *, .product-layout > *,
+.filter-bar > *, .fab-filter > *, .ad-info, .auth-card, .dash-card {
+  min-width: 0;
+}
+
+/* Long words, emails and links wrap instead of stretching the page */
+h1, h2, h3, p, a, span, div, strong, label {
+  overflow-wrap: anywhere;
+}
+
+.leaflet-container, .map-box { max-width: 100%; }
+
+@media (max-width: 768px) {
+  .nav-inner { flex-wrap: wrap; gap: 8px; }
+  .nav-links { flex-wrap: wrap; gap: 14px; }
+  .hero h1 { font-size: 2rem; }
+  .logo { letter-spacing: 2px; }
+  .auth-card { padding: 22px 16px; }
+  .gallery-main { max-height: 300px; }
+  .ad-row { flex-wrap: wrap; }
+}
