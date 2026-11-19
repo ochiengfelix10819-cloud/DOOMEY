@@ -131,7 +131,7 @@
 
     var currentUserId = null;
     var currentProfile = null;
-    var currentDetails = null;
+    var currentDetails = null;     var currentWhatsapp = '';     var currentWhatsapp = '';
 
     var pinMap = null, pinMarker = null, pinLat = null, pinLng = null;
 
@@ -201,7 +201,7 @@
         document.getElementById('businessName').value = currentDetails.business_name || '';
         document.getElementById('skills').value = currentDetails.skills || '';
         document.getElementById('experience').value = currentDetails.experience_years == null ? '' : currentDetails.experience_years;
-        document.getElementById('whatsapp').value = currentDetails.whatsapp || '';
+        document.getElementById('whatsapp').value = currentWhatsapp || '';
         document.getElementById('county').value = currentDetails.county || '';
         document.getElementById('town').value = currentDetails.town || '';
         document.getElementById('area').value = currentDetails.area || '';
@@ -220,7 +220,7 @@
       document.getElementById('dLocation').textContent =
         'Location: ' + d.area + ', ' + d.town + ', ' + d.county + ' County';
       document.getElementById('dPhone').textContent = 'Phone: ' + (currentProfile.phone || '');
-      document.getElementById('dWhatsapp').textContent = 'WhatsApp: ' + (d.whatsapp || '');
+      document.getElementById('dWhatsapp').textContent = 'WhatsApp: ' + (currentWhatsapp || '');
       document.getElementById('dExperience').textContent = 'Experience: ' + d.experience_years + ' years';
       document.getElementById('dSkills').textContent = 'Skills: ' + d.skills;
 
@@ -367,7 +367,7 @@
         document.getElementById('loadingView').innerHTML = '<h2>Could not load your business details.</h2>';
         return;
       }
-      currentDetails = details.data;
+      currentDetails = details.data;       var ct = await supabaseClient.from('fabricator_contacts').select('whatsapp').eq('id', currentUserId).maybeSingle();       currentWhatsapp = (ct.data && ct.data.whatsapp) ? ct.data.whatsapp : '';       var ct = await supabaseClient.from('fabricator_contacts').select('whatsapp').eq('id', currentUserId).maybeSingle();       currentWhatsapp = (ct.data && ct.data.whatsapp) ? ct.data.whatsapp : '';       var ct = await supabaseClient.from('fabricator_contacts').select('whatsapp').eq('id', currentUserId).maybeSingle();       currentWhatsapp = (ct.data && ct.data.whatsapp) ? ct.data.whatsapp : '';
 
       if (!currentDetails || !currentDetails.business_name) {
         openProfileForm(false);
@@ -396,7 +396,6 @@
         business_name: document.getElementById('businessName').value.trim(),
         skills: document.getElementById('skills').value.trim(),
         experience_years: experience,
-        whatsapp: whatsapp.replace(/\s/g, ''),
         county: document.getElementById('county').value,
         town: document.getElementById('town').value.trim(),
         area: document.getElementById('area').value.trim(),
@@ -441,7 +440,7 @@
         return;
       }
 
-      currentDetails = result.data;
+      var cres = await supabaseClient.from('fabricator_contacts').upsert({ id: currentUserId, whatsapp: whatsapp.replace(/\s/g, '') });       if (cres.error) { showMessage('Could not save WhatsApp number: ' + cres.error.message, true); return; }       currentWhatsapp = whatsapp.replace(/\s/g, '');       currentDetails = result.data;
       currentProfile.phone = phone.replace(/\s/g, '');
       document.getElementById('message').style.display = 'none';
       showDashboard();
