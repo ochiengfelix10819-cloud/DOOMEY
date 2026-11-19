@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Quotations | DOOMEY</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="navbar">
+    <div class="container nav-inner">
+      <a href="index.html" class="logo">DOOMEY</a>
+      <nav class="nav-links" style="display:flex">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="my-orders.html">Orders</a>
+        <a href="#" id="logoutLink">Log Out</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container dash-wrap">
+    <h2 id="pageTitle">My Quotations</h2>
+    <div id="adminMsg" class="message" style="display:none"></div>
+    <p class="auth-sub">Quotes are estimates from the fabricator. Payment is made directly to the fabricator. DOOMEY does not hold payments.</p>
+    <div class="dash-card" id="list">Loading...</div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    var uid = null, role = null;
+    var STATUS = { pending: 'Awaiting quote', quoted: 'Quoted', accepted: 'Accepted', declined: 'Declined', cancelled: 'Cancelled' };
+
+    function note(text, isError) {
+      var b = document.getElementById('adminMsg');
+      b.textContent = text;
+      b.className = 'message ' + (isError ? 'error' : 'success');
+      b.style.display = 'block';
+    }
+
+    function line(parent, text) {
+      var d = document.createElement('div');
+      d.textContent = text;
+      parent.appendChild(d);
+    }
+
+    async function update(id, fields, doneText) {
+      var r = await supabaseClient.from('quotations').update(fields).eq('id', id);
+      if (r.error) { note('Could not update: ' + r.error.message, true); return; }
+      note(doneText, false);
+      loadQuotes();
+    }
+
+    function sendQuote(q) {
+      var raw = prompt('Your price in KES for "' + q.title + '":');
+      if (raw === null) return;
+      var price = parseFloat(raw.replace(/,/g, ''));
+      if (isNaN(price) || price <= 0) { note('Please enter a valid price.', true); return; }
+      var msg = prompt('Message to the customer (materials, timeline, deposit...):', q.quote_message || '');
+      if (msg === null) return;
+      update(q.id, { status: 'quoted', quoted_price_kes: price, quote_message: msg.trim() || null }, 'Quote sent.');
+    }
+
+    async function loadQuotes() {
+      var list = document.getElementById('list');
+      list.textContent = 'Loading...';
+
+      var query = supabaseClient.from('quotations').select('*').order('created_at', { ascending: false });
+      query = (role === 'fabricator') ? query.eq('fabricator_id', uid) : query.eq('customer_id', uid);
+      var r = await query;
+      if (r.error) { list.textContent = 'Could not load quotations: ' + r.error.message; return; }
+      if (!r.data.length) {
+        list.innerHTML = role === 'fabricator'
+          ? '<div class="empty-state"><div class="empty-icon">\uD83D\uDCCB</div><h3>No quotation requests yet</h3><p>Requests from customers will appear here.</p></div>'
+          : '<div class="empty-state"><div class="empty-icon">\uD83D\uDCCB</div><h3>No quotation requests yet</h3><p>Open a fabricator profile and tap Request a Quotation.</p><a href="find-welder.html" class="btn">Find a welder</a></div>';
+        return;
+      }
+
+      var names = {};
+      if (role === 'customer') {
+        var ids = r.data.map(function (q) { return q.fabricator_id; });
+        var f = await supabaseClient.from('fabricator_details').select('id, business_name').in('id', ids);
+        (f.data || []).forEach(function (d) { names[d.id] = d.business_name; });
+      }
+
+      list.innerHTML = '';
+      for (var i = 0; i < r.data.length; i++) {
+        var q = r.data[i];
+        var row = document.createElement('div');
+        row.className = 'ad-row admin-row';
+
+        var info = document.createElement('div');
+        info.className = 'ad-info';
+        var t = document.createElement('strong');
+        t.textContent = q.title;
+        info.appendChild(t);
+        line(info, q.description);
+        if (q.measurements) line(info, 'Measurements: ' + q.measurements);
+        line(info, 'Site: ' + q.location);
+        if (q.budget_kes != null) line(info, 'Budget: KES ' + Number(q.budget_kes).toLocaleString());
+
+        if (role === 'fabricator') {
+          line(info, 'Customer: ' + (q.customer_name || '-'));
+          var ph = document.createElement('div');
+          ph.appendChild(document.createTextNode('Phone: '));
+          var a = document.createElement('a');
+          a.href = 'tel:' + q.customer_phone;
+          a.textContent = q.customer_phone;
+          a.style.color = 'var(--copper)';
+          ph.appendChild(a);
+          info.appendChild(ph);
+        } else {
+          line(info, 'Fabricator: ' + (names[q.fabricator_id] || '-'));
+        }
+        line(info, 'Requested: ' + new Date(q.created_at).toLocaleString());
+
+        if (q.reference_paths && q.reference_paths.length) {
+          var signed = await supabaseClient.storage.from('quotation-refs').createSignedUrls(q.reference_paths, 600);
+          var gal = document.createElement('div');
+          gal.className = 'admin-gallery';
+          gal.style.marginTop = '8px';
+          (signed.data || []).forEach(function (s) {
+            if (!s.signedUrl) return;
+            var link = document.createElement('a');
+            link.href = s.signedUrl; link.target = '_blank'; link.rel = 'noopener';
+            var im = document.createElement('img');
+            im.src = s.signedUrl; im.alt = 'Reference picture';
+            link.appendChild(im);
+            gal.appendChild(link);
+          });
+          info.appendChild(gal);
+        }
+
+        if (q.quoted_price_kes != null) {
+          var qb = document.createElement('div');
+          qb.className = 'dash-card';
+          qb.style.margin = '10px 0';
+          var qp = document.createElement('strong');
+          qp.textContent = 'Quote: KES ' + Number(q.quoted_price_kes).toLocaleString();
+          qb.appendChild(qp);
+          if (q.quote_message) line(qb, q.quote_message);
+          info.appendChild(qb);
+        }
+
+        var tag = document.createElement('span');
+        tag.className = 'status-tag status-' + (q.status === 'quoted' ? 'accepted' : q.status === 'pending' ? 'pending' : q.status);
+        tag.textContent = STATUS[q.status];
+        info.appendChild(tag);
+
+        var actions = document.createElement('div');
+        actions.className = 'ad-actions';
+
+        (function (q) {
+          function btn(text, danger, fn) {
+            var b = document.createElement('button');
+            b.type = 'button'; b.textContent = text;
+            if (danger) b.className = 'danger';
+            b.addEventListener('click', fn);
+            actions.appendChild(b);
+          }
+          if (role === 'fabricator') {
+            if (q.status === 'pending' || q.status === 'quoted') btn(q.status === 'pending' ? 'Send quote' : 'Change quote', false, function () { sendQuote(q); });
+            if (q.status === 'pending') btn('Decline', true, function () {
+              if (confirm('Decline this request?')) update(q.id, { status: 'declined' }, 'Request declined.');
+            });
+          } else {
+            if (q.status === 'quoted') {
+              btn('Accept quote', false, function () {
+                if (confirm('Accept this quote? Contact the fabricator to agree payment and timing.')) update(q.id, { status: 'accepted' }, 'Quote accepted.');
+              });
+              btn('Decline', true, function () {
+                if (confirm('Decline this quote?')) update(q.id, { status: 'declined' }, 'Quote declined.');
+              });
+            }
+            if (q.status === 'pending' || q.status === 'quoted') btn('Cancel request', true, function () {
+              if (confirm('Cancel this request?')) update(q.id, { status: 'cancelled' }, 'Request cancelled.');
+            });
+          }
+        })(q);
+
+        row.appendChild(info);
+        row.appendChild(actions);
+        list.appendChild(row);
+      }
+    }
+
+    async function init() {
+      var s = await supabaseClient.auth.getSession();
+      if (!s.data.session) { window.location.href = 'login.html'; return; }
+      uid = s.data.session.user.id;
+      var p = await supabaseClient.from('profiles').select('role').eq('id', uid).single();
+      if (p.error) { document.getElementById('list').textContent = 'Could not load your account.'; return; }
+      role = p.data.role;
+      if (role === 'admin') { window.location.href = 'admin.html'; return; }
+      if (role === 'fabricator') document.getElementById('pageTitle').textContent = 'Quotation Requests';
+      loadQuotes();
+    }
+
+    document.getElementById('logoutLink').addEventListener('click', function (e) {
+      e.preventDefault();
+      logoutUser();
+    });
+
+    init();
+  </script>
+</body>
+</html>
