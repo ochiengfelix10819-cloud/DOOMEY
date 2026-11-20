@@ -517,3 +517,24 @@ h1, h2, h3, p, a, span, div, strong, label {
   background: var(--charcoal-light); color: var(--white); font-size: 1rem; font-family: inherit; min-width: 0;
 }
 .chat-form textarea:focus { outline: 2px solid var(--copper); }
+/* ---------- ORDER TRACKER & PAYMENTS ---------- */
+.tracker { display: flex; gap: 4px; margin: 12px 0 6px; }
+.track-step {
+  flex: 1; text-align: center; font-size: 0.7rem; color: var(--grey);
+  border-top: 4px solid #4a4a4f; padding-top: 4px;
+}
+.track-step.done { border-top-color: var(--copper); color: var(--white); }
+.pay-box {
+  margin-top: 12px; padding: 12px; border: 1px solid #4a4a4f; border-radius: 8px;
+  background: rgba(0,0,0,0.15);
+}
+.pay-record { padding: 8px 0; border-top: 1px solid #38383c; font-size: 0.9rem; }
+.pay-form { margin-top: 10px; display: none; }
+.pay-form input, .pay-form select {
+  width: 100%; padding: 10px; margin: 4px 0 8px; border-radius: 6px;
+  border: 1px solid #4a4a4f; background: var(--charcoal); color: var(--white); font-size: 1rem;
+}
+.pay-form label { font-size: 0.85rem; display: block; margin-top: 4px; }
+.status-reported { background: #7a5a1f; color: #ffe0a3; }
+.status-confirmed { background: #1f7a4d; color: #fff; }
+.status-not_received { background: #7a1f1f; color: #ffc4c4; }
