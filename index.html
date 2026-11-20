@@ -6,7 +6,7 @@
   <title>DOOMEY | Welders & Fabricators Marketplace in Kenya</title>
   <meta name="description" content="Find skilled welders and metal fabricators in Kenya. Gates, grills, staircases, carports, metal furniture and more.">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css">   <link rel="stylesheet" href="entrance.css">   <link rel="stylesheet" href="entrance.css">
 </head>
 <body>
 
@@ -25,14 +25,34 @@
     </div>
   </header>
 
-  <section class="hero">
-    <div class="container">
-      <h1>Discover <span>Skilled Hands.</span><br>Build Great Things.</h1>
-      <p>Kenya's marketplace connecting customers with trusted welders and metal fabricators near you.</p>
-      <form class="search-box" action="explore.html" method="get">
-        <input type="text" name="q" placeholder="Search gates, grills, staircases or a welder...">
-        <button type="submit">Search</button>
-      </form>
+ <section class="entrance" id="entrance">
+    <div class="entrance-sticky">
+      <div class="entrance-media" id="entranceMedia">
+        <video class="entrance-video" id="entranceVideo" muted loop playsinline style="display:none"></video>
+        <div class="entrance-bg"></div>
+        <canvas id="sparks"></canvas>
+        <div class="entrance-shade"></div>
+      </div>
+
+      <div class="entrance-copy" id="entranceCopy">
+        <p class="eyebrow">Kenya's welders and fabricators marketplace</p>
+        <h1>
+          <span class="line"><span>Discover <em>Skilled Hands.</em></span></span>
+          <span class="line"><span>Build Great Things.</span></span>
+        </h1>
+        <p class="entrance-sub">Find trusted welders and metal fabricators near you.</p>
+        <form class="search-box" action="explore.html" method="get">
+          <input type="text" name="q" placeholder="Search gates, grills, staircases or a welder...">
+          <button type="submit">Search</button>
+        </form>
+        <div class="scroll-cue">Scroll</div>
+      </div>
+
+      <div class="entrance-reveal" id="entranceReveal">
+        <h2>Every great build starts with <em>skilled hands.</em></h2>
+        <p>Browse real work from verified fabricators across Kenya.</p>
+        <a href="explore.html" class="btn">Explore Products</a>
+      </div>
     </div>
   </section>
 
@@ -120,7 +140,7 @@
       <div class="footer-bottom">&copy; 2026 DOOMEY. All rights reserved.</div>
     </div>
   </footer>
-
+<script src="entrance.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script>
