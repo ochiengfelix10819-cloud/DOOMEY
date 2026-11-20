@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Messages | DOOMEY</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="navbar">
+    <div class="container nav-inner">
+      <a href="index.html" class="logo">DOOMEY</a>
+      <nav class="nav-links" style="display:flex">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="my-orders.html">Orders</a>
+        <a href="#" id="logoutLink">Log Out</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container dash-wrap">
+    <div id="notice" class="message" style="display:none"></div>
+
+    <!-- Conversation list -->
+    <div id="listView">
+      <h2>Messages</h2>
+      <div class="dash-card" id="convList">Loading...</div>
+    </div>
+
+    <!-- Open conversation -->
+    <div id="threadView" style="display:none">
+      <p><a href="#" id="backLink" style="color:var(--copper)">&larr; All conversations</a></p>
+      <h2 id="threadTitle"></h2>
+      <div class="dash-card chat-box" id="chatBox"></div>
+      <form id="sendForm" class="chat-form">
+        <textarea id="body" rows="2" maxlength="2000" placeholder="Type your message..." required></textarea>
+        <button type="submit" class="btn" id="sendBtn">Send</button>
+      </form>
+      <p class="auth-sub">Do not share passwords or pay anyone before agreeing the price and details. DOOMEY never asks for your password.</p>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    var uid = null, role = null;
+    var convs = [];
+    var currentConv = null;      // conversation id, or null for a new draft
+    var currentOther = null;     // { id, name }
+    var pollTimer = null;
+    var lastCount = -1;
+
+    function notice(text, isError) {
+      var b = document.getElementById('notice');
+      b.textContent = text;
+      b.className = 'message ' + (isError ? 'error' : 'success');
+      b.style.display = 'block';
+    }
+
+    function el(tag, cls, text) {
+      var e = document.createElement(tag);
+      if (cls) e.className = cls;
+      if (text !== undefined) e.textContent = text;
+      return e;
+    }
+
+    function showList() {
+      clearInterval(pollTimer);
+      currentConv = null;
+      currentOther = null;
+      document.getElementById('threadView').style.display = 'none';
+      document.getElementById('listView').style.display = 'block';
+      history.replaceState(null, '', 'messages.html');
+      loadConversations();
+    }
+
+    async function loadConversations() {
+      var list = document.getElementById('convList');
+      var r = await supabaseClient.rpc('my_conversations');
+      if (r.error) { list.textContent = 'Could not load messages: ' + r.error.message; return; }
+      convs = r.data || [];
+      list.innerHTML = '';
+      if (!convs.length) {
+        list.innerHTML = '<div class="empty-state"><div class="empty-icon">\uD83D\uDCAC</div><h3>No conversations yet</h3><p>' +
+          (role === 'fabricator'
+            ? 'When a customer messages you, it will appear here.'
+            : 'Open a fabricator profile and tap Message to start a conversation.') +
+          '</p>' + (role === 'fabricator' ? '' : '<a href="find-welder.html" class="btn">Find a welder</a>') + '</div>';
+        return;
+      }
+      convs.forEach(function (c) {
+        var row = el('div', 'conv-row');
+        var left = el('div', 'conv-main');
+        left.appendChild(el('strong', '', c.other_name));
+        var preview = c.last_body || '';
+        if (preview.length > 70) preview = preview.substring(0, 70) + '...';
+        left.appendChild(el('div', 'auth-sub conv-preview', preview));
+        var right = el('div', 'conv-side');
+        right.appendChild(el('div', 'auth-sub', new Date(c.last_message_at).toLocaleString()));
+        if (Number(c.unread) > 0) right.appendChild(el('span', 'unread-badge', String(c.unread)));
+        row.appendChild(left);
+        row.appendChild(right);
+        row.addEventListener('click', function () { openThread(c.id, c.other_id, c.other_name); });
+        list.appendChild(row);
+      });
+    }
+
+    function openThread(convId, otherId, otherName) {
+      currentConv = convId;
+      currentOther = { id: otherId, name: otherName };
+      lastCount = -1;
+      document.getElementById('listView').style.display = 'none';
+      document.getElementById('threadView').style.display = 'block';
+      document.getElementById('threadTitle').textContent = otherName;
+      document.getElementById('chatBox').innerHTML = '';
+      if (convId) {
+        history.replaceState(null, '', 'messages.html?c=' + convId);
+        loadMessages();
+        clearInterval(pollTimer);
+        pollTimer = setInterval(loadMessages, 8000);
+      } else {
+        document.getElementById('chatBox').appendChild(
+          el('p', 'auth-sub', 'No messages yet. Say hello to ' + otherName + '.'));
+      }
+    }
+
+    async function loadMessages() {
+      if (!currentConv) return;
+      var r = await supabaseClient.from('messages')
+        .select('id, sender_id, body, is_read, created_at')
+        .eq('conversation_id', currentConv)
+        .order('created_at', { ascending: true })
+        .limit(300);
+      if (r.error) { notice('Could not load messages: ' + r.error.message, true); return; }
+
+      var box = document.getElementById('chatBox');
+      if (r.data.length !== lastCount) {
+        box.innerHTML = '';
+        r.data.forEach(function (m) {
+          var mine = m.sender_id === uid;
+          var wrap = el('div', 'bubble-wrap ' + (mine ? 'mine' : 'theirs'));
+          var bubble = el('div', 'bubble');
+          bubble.appendChild(el('div', 'bubble-name', mine ? 'You' : currentOther.name));
+          bubble.appendChild(el('div', 'bubble-body', m.body));
+          var meta = new Date(m.created_at).toLocaleString();
+          if (mine) meta += m.is_read ? '  \u2022 Read' : '  \u2022 Sent';
+          bubble.appendChild(el('div', 'bubble-time', meta));
+          wrap.appendChild(bubble);
+          box.appendChild(wrap);
+        });
+        if (!r.data.length) box.appendChild(el('p', 'auth-sub', 'No messages yet.'));
+        box.scrollTop = box.scrollHeight;
+        lastCount = r.data.length;
+      }
+
+      var unread = r.data.some(function (m) { return m.sender_id !== uid && !m.is_read; });
+      if (unread) {
+        await supabaseClient.from('messages').update({ is_read: true })
+          .eq('conversation_id', currentConv).neq('sender_id', uid).eq('is_read', false);
+      }
+    }
+
+    document.getElementById('sendForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var btn = document.getElementById('sendBtn');
+      var field = document.getElementById('body');
+      var text = field.value.trim();
+      if (!text) return;
+      if (text.length > 2000) { notice('Message is too long (max 2000 characters).', true); return; }
+
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+
+      if (!currentConv) {
+        var c = await supabaseClient.from('conversations')
+          .insert({ fabricator_id: currentOther.id, customer_id: uid })
+          .select('id').single();
+        if (c.error) {
+          // Already exists (duplicate)? Find it.
+          var again = await supabaseClient.from('conversations').select('id')
+            .eq('customer_id', uid).eq('fabricator_id', currentOther.id).maybeSingle();
+          if (again.data) { c = again; }
+          else {
+            btn.disabled = false; btn.textContent = 'Send';
+            notice('Could not start the conversation: ' + c.error.message, true);
+            return;
+          }
+        }
+        currentConv = c.data.id;
+        history.replaceState(null, '', 'messages.html?c=' + currentConv);
+        clearInterval(pollTimer);
+        pollTimer = setInterval(loadMessages, 8000);
+      }
+
+      var m = await supabaseClient.from('messages').insert({
+        conversation_id: currentConv,
+        sender_id: uid,
+        body: text
+      });
+      btn.disabled = false;
+      btn.textContent = 'Send';
+      if (m.error) { notice('Could not send: ' + m.error.message, true); return; }
+
+      document.getElementById('notice').style.display = 'none';
+      field.value = '';
+      lastCount = -1;
+      loadMessages();
+    });
+
+    document.getElementById('backLink').addEventListener('click', function (e) {
+      e.preventDefault();
+      showList();
+    });
+
+    document.getElementById('logoutLink').addEventListener('click', function (e) {
+      e.preventDefault();
+      logoutUser();
+    });
+
+    async function init() {
+      var s = await supabaseClient.auth.getSession();
+      if (!s.data.session) { window.location.href = 'login.html'; return; }
+      uid = s.data.session.user.id;
+
+      var p = await supabaseClient.from('profiles').select('role, is_suspended').eq('id', uid).single();
+      if (p.error) { document.getElementById('convList').textContent = 'Could not load your account.'; return; }
+      role = p.data.role;
+      if (role === 'admin') { window.location.href = 'admin.html'; return; }
+      if (p.data.is_suspended) { document.getElementById('convList').textContent = 'Your account is suspended.'; return; }
+
+      await loadConversations();
+
+      var params = new URLSearchParams(window.location.search);
+      var c = params.get('c');
+      var to = params.get('to');
+
+      if (c) {
+        var found = convs.filter(function (x) { return x.id === c; })[0];
+        if (found) openThread(found.id, found.other_id, found.other_name);
+        else notice('That conversation was not found.', true);
+      } else if (to) {
+        var existing = convs.filter(function (x) { return x.other_id === to; })[0];
+        if (existing) { openThread(existing.id, existing.other_id, existing.other_name); return; }
+        if (role !== 'customer') { notice('Only customer accounts can start a conversation with a fabricator.', true); return; }
+        var f = await supabaseClient.from('fabricator_details')
+          .select('business_name').eq('id', to).maybeSingle();
+        if (f.error || !f.data || !f.data.business_name) { notice('That fabricator was not found.', true); return; }
+        openThread(null, to, f.data.business_name);
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
