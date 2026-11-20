@@ -489,3 +489,31 @@ h1, h2, h3, p, a, span, div, strong, label {
 .prose a { color: var(--copper); }
 .prose .updated { color: var(--grey); font-size: 0.9rem; }
 .contact-card { margin: 14px 0; }
+/* ---------- MESSAGES ---------- */
+.conv-row {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  padding: 14px 0; border-top: 1px solid #38383c; cursor: pointer;
+}
+.conv-row:first-child { border-top: none; }
+.conv-row:hover { background: rgba(217,114,43,0.08); }
+.conv-main { min-width: 0; flex: 1; }
+.conv-preview { margin: 2px 0 0; }
+.conv-side { text-align: right; flex-shrink: 0; font-size: 0.8rem; }
+.unread-badge {
+  display: inline-block; min-width: 22px; padding: 2px 8px; margin-top: 4px;
+  border-radius: 20px; background: var(--copper); color: #fff; font-weight: bold; font-size: 0.8rem;
+}
+.chat-box { height: 55vh; min-height: 260px; overflow-y: auto; margin: 12px 0; }
+.bubble-wrap { display: flex; margin-bottom: 10px; }
+.bubble-wrap.mine { justify-content: flex-end; }
+.bubble { max-width: 80%; padding: 10px 14px; border-radius: 12px; background: #3a3a3e; }
+.bubble-wrap.mine .bubble { background: var(--copper-dark); }
+.bubble-name { font-size: 0.75rem; opacity: 0.8; font-weight: bold; margin-bottom: 2px; }
+.bubble-body { white-space: pre-wrap; }
+.bubble-time { font-size: 0.7rem; opacity: 0.7; margin-top: 4px; }
+.chat-form { display: flex; gap: 10px; align-items: flex-end; }
+.chat-form textarea {
+  flex: 1; padding: 12px; border-radius: 6px; border: 1px solid #4a4a4f;
+  background: var(--charcoal-light); color: var(--white); font-size: 1rem; font-family: inherit; min-width: 0;
+}
+.chat-form textarea:focus { outline: 2px solid var(--copper); }
