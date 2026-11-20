@@ -16,7 +16,7 @@
   // Optional real footage: add images/hero.mp4 to your repo and it plays automatically
   var video = document.getElementById('entranceVideo');
   fetch('images/hero.mp4', { method: 'HEAD' }).then(function (r) {
-    if (r.ok && video) { video.src = 'images/hero.mp4'; video.style.display = 'block'; video.play().catch(function () {}); }
+    if (r.ok && video) {       video.src = 'images/hero.mp4';       video.style.display = 'block';       var bg = document.querySelector('.entrance-bg');       if (bg) bg.style.display = 'none';       video.play().catch(function () {});     }
   }).catch(function () {});
 
   // ---- Sparks ----
