@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Orders | DOOMEY</title>
+  <title>My Orders | DOOMEY</title>
   <meta name="robots" content="noindex, nofollow">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="stylesheet" href="styles.css">
@@ -24,7 +24,7 @@
     <h2 id="pageTitle">My Orders</h2>
     <div id="notifBox" class="dash-card" style="display:none;margin:14px 0"></div>
     <div id="adminMsg" class="message" style="display:none"></div>
-    <p class="auth-sub">Payments are made directly between customer and fabricator. DOOMEY does not hold payments.</p>
+    <p class="auth-sub">Payments are made directly between customer and fabricator. DOOMEY does not hold payments. A payment counts as received only after the fabricator confirms it.</p>
     <div class="dash-card" id="list">Loading...</div>
   </main>
 
@@ -35,23 +35,33 @@
     var uid = null, role = null;
     var STATUS = { pending: 'Pending', accepted: 'Accepted', in_progress: 'In Progress', completed: 'Completed', cancelled: 'Cancelled' };
     var PAY = { mpesa: 'M-Pesa', cash: 'Cash', bank_transfer: 'Bank transfer' };
+    var PSTATUS = { reported: 'Reported, awaiting confirmation', confirmed: 'Confirmed by fabricator', not_received: 'Marked as not received' };
+    var FLOW = ['pending', 'accepted', 'in_progress', 'completed'];
     var NEXT = {
       pending: [['accepted', 'Accept']],
       accepted: [['in_progress', 'Start work']],
       in_progress: [['completed', 'Mark completed']]
     };
 
+    function money(n) { return 'KES ' + Number(n).toLocaleString(); }
+
+    function el(tag, cls, text) {
+      var e = document.createElement(tag);
+      if (cls) e.className = cls;
+      if (text !== undefined) e.textContent = text;
+      return e;
+    }
+
     function note(text, isError) {
       var b = document.getElementById('adminMsg');
       b.textContent = text;
       b.className = 'message ' + (isError ? 'error' : 'success');
       b.style.display = 'block';
+      window.scrollTo(0, 0);
     }
 
     function line(parent, text) {
-      var d = document.createElement('div');
-      d.textContent = text;
-      parent.appendChild(d);
+      parent.appendChild(el('div', '', text));
     }
 
     async function changeStatus(id, status) {
@@ -59,6 +69,152 @@
       if (r.error) { note('Could not update: ' + r.error.message, true); return; }
       note('Order updated.', false);
       loadOrders();
+    }
+
+    async function changePayment(id, status) {
+      var r = await supabaseClient.from('payment_records').update({ status: status }).eq('id', id);
+      if (r.error) { note('Could not update payment: ' + r.error.message, true); return; }
+      note(status === 'confirmed' ? 'Payment confirmed.' : 'Payment marked as not received.', false);
+      loadOrders();
+    }
+
+    function validKnownMpesa(v) { return /^[A-Z0-9]{10}$/.test(v); }
+
+    function buildPayForm(o, outstanding) {
+      var form = el('form', 'pay-form');
+      form.innerHTML =
+        '<label>Amount paid (KES) *</label><input type="number" class="pf-amount" min="1" step="1" required>' +
+        '<label>Payment method *</label><select class="pf-method">' +
+          '<option value="mpesa">M-Pesa</option><option value="cash">Cash</option><option value="bank_transfer">Bank transfer</option></select>' +
+        '<label class="pf-ref-label">M-Pesa confirmation code *</label><input type="text" class="pf-ref" maxlength="40" placeholder="e.g. QGH7ABC123">' +
+        '<label>Note (optional)</label><input type="text" class="pf-note" maxlength="200">' +
+        '<button type="submit" class="btn pf-submit"></button>';
+
+      var amount = form.querySelector('.pf-amount');
+      var method = form.querySelector('.pf-method');
+      var ref = form.querySelector('.pf-ref');
+      var refLabel = form.querySelector('.pf-ref-label');
+      var submit = form.querySelector('.pf-submit');
+      var label = (role === 'fabricator') ? 'Record Payment Received' : 'Report Payment';
+      submit.textContent = label;
+      method.value = o.payment_method;
+      if (outstanding > 0) amount.value = Math.round(outstanding);
+
+      function syncMethod() {
+        if (method.value === 'cash') {
+          ref.style.display = 'none'; refLabel.style.display = 'none';
+        } else {
+          ref.style.display = 'block'; refLabel.style.display = 'block';
+          refLabel.textContent = method.value === 'mpesa' ? 'M-Pesa confirmation code *' : 'Bank transfer reference *';
+          ref.placeholder = method.value === 'mpesa' ? 'e.g. QGH7ABC123' : 'Reference from your bank';
+        }
+      }
+      method.addEventListener('change', syncMethod);
+      syncMethod();
+
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var amt = parseFloat(amount.value);
+        var m = method.value;
+        var r = ref.value.trim().toUpperCase();
+        if (isNaN(amt) || amt <= 0) { note('Enter a valid amount.', true); return; }
+        if (m === 'mpesa' && !validKnownMpesa(r)) { note('Enter the 10-character M-Pesa confirmation code, e.g. QGH7ABC123.', true); return; }
+        if (m === 'bank_transfer' && r.length < 4) { note('Enter the bank transfer reference.', true); return; }
+
+        submit.disabled = true;
+        submit.textContent = 'Please wait...';
+        var res = await supabaseClient.from('payment_records').insert({
+          order_id: o.id,
+          amount_kes: amt,
+          method: m,
+          reference: (m === 'cash') ? null : r,
+          note: form.querySelector('.pf-note').value.trim() || null,
+          recorded_by: uid
+        });
+        submit.disabled = false;
+        submit.textContent = label;
+        if (res.error) {
+          var msg = res.error.message || '';
+          if (msg.toLowerCase().indexOf('duplicate') !== -1) msg = 'That M-Pesa code is already used on another payment record.';
+          note('Could not save payment: ' + msg, true);
+          return;
+        }
+        note(role === 'fabricator' ? 'Payment recorded as received.' : 'Payment reported. The fabricator will confirm it.', false);
+        loadOrders();
+      });
+      return form;
+    }
+
+    function renderPayments(o, pays, info) {
+      var total = Number(o.unit_price_kes) * o.quantity;
+      var confirmed = 0, pending = 0;
+      pays.forEach(function (p) {
+        if (p.status === 'confirmed') confirmed += Number(p.amount_kes);
+        else if (p.status === 'reported') pending += Number(p.amount_kes);
+      });
+
+      var box = el('div', 'pay-box');
+      box.appendChild(el('strong', '', 'Payment'));
+      line(box, 'Order total: ' + money(total) + ' (final price is agreed with the fabricator)');
+      line(box, 'Confirmed as received: ' + money(confirmed));
+      if (pending > 0) line(box, 'Reported, not yet confirmed: ' + money(pending));
+      if (total > 0 && confirmed >= total) line(box, 'Fully paid (confirmed by the fabricator)');
+
+      pays.forEach(function (p) {
+        var rec = el('div', 'pay-record');
+        var who = (p.recorded_by === o.customer_id) ? 'Reported by customer' : 'Recorded by fabricator';
+        line(rec, money(p.amount_kes) + ' | ' + PAY[p.method] + (p.reference ? ' | ' + p.reference : ''));
+        line(rec, who + ' | ' + new Date(p.created_at).toLocaleString());
+        if (p.note) line(rec, 'Note: ' + p.note);
+        rec.appendChild(el('span', 'status-tag status-' + p.status, PSTATUS[p.status]));
+
+        if (role === 'fabricator' && p.status !== 'confirmed') {
+          var acts = el('div', 'ad-actions');
+          acts.style.marginTop = '6px';
+          var ok = el('button', '', 'Confirm received');
+          ok.type = 'button';
+          ok.addEventListener('click', function () {
+            if (confirm('Confirm that you received ' + money(p.amount_kes) + '?')) changePayment(p.id, 'confirmed');
+          });
+          acts.appendChild(ok);
+          if (p.status === 'reported') {
+            var no = el('button', 'danger', 'Not received');
+            no.type = 'button';
+            no.addEventListener('click', function () {
+              if (confirm('Mark this payment as NOT received?')) changePayment(p.id, 'not_received');
+            });
+            acts.appendChild(no);
+          }
+          rec.appendChild(acts);
+        }
+        box.appendChild(rec);
+      });
+
+      var canPay = ['accepted', 'in_progress', 'completed'].indexOf(o.status) !== -1;
+      if (canPay) {
+        var form = buildPayForm(o, total - confirmed - pending);
+        var toggle = el('button', 'btn btn-outline', role === 'fabricator' ? 'Record a payment received' : 'Report a payment');
+        toggle.type = 'button';
+        toggle.style.marginTop = '10px';
+        toggle.addEventListener('click', function () {
+          form.style.display = (form.style.display === 'block') ? 'none' : 'block';
+        });
+        box.appendChild(toggle);
+        box.appendChild(form);
+      } else if (o.status === 'pending') {
+        box.appendChild(el('p', 'auth-sub', 'Payments can be recorded once the fabricator accepts the order.'));
+      }
+      info.appendChild(box);
+    }
+
+    function renderTracker(o, info) {
+      if (o.status === 'cancelled') return;
+      var idx = FLOW.indexOf(o.status);
+      var t = el('div', 'tracker');
+      FLOW.forEach(function (s, i) {
+        t.appendChild(el('div', 'track-step' + (i <= idx ? ' done' : ''), STATUS[s]));
+      });
+      info.appendChild(t);
     }
 
     async function loadNotifications() {
@@ -69,12 +225,10 @@
 
       var box = document.getElementById('notifBox');
       box.innerHTML = '';
-      var h = document.createElement('h3'); h.textContent = 'Notifications';
-      box.appendChild(h);
+      box.appendChild(el('h3', '', 'Notifications'));
       r.data.forEach(function (n) {
-        var d = document.createElement('div');
+        var d = el('div', '', (n.is_read ? '' : '\u25CF ') + n.message + '  (' + new Date(n.created_at).toLocaleString() + ')');
         d.style.padding = '6px 0';
-        d.textContent = (n.is_read ? '' : '\u25CF ') + n.message + '  (' + new Date(n.created_at).toLocaleString() + ')';
         if (!n.is_read) d.style.fontWeight = 'bold';
         box.appendChild(d);
       });
@@ -92,9 +246,20 @@
       var r = await q;
       if (r.error) { list.textContent = 'Could not load orders: ' + r.error.message; return; }
       if (!r.data.length) {
-        list.innerHTML = role === 'fabricator'           ? '<div class="empty-state"><div class="empty-icon">\uD83D\uDCE6</div><h3>No orders yet</h3><p>New customer orders will appear here.</p></div>'           : '<div class="empty-state"><div class="empty-icon">\uD83D\uDCE6</div><h3>No orders yet</h3><p>When you order a product, you can track it here.</p><a href="explore.html" class="btn">Browse products</a></div>';
+        list.innerHTML = role === 'fabricator'
+          ? '<div class="empty-state"><div class="empty-icon">\uD83D\uDCE6</div><h3>No orders yet</h3><p>New customer orders will appear here.</p></div>'
+          : '<div class="empty-state"><div class="empty-icon">\uD83D\uDCE6</div><h3>No orders yet</h3><p>When you order a product, you can track it here.</p><a href="explore.html" class="btn">Browse products</a></div>';
         return;
       }
+
+      var orderIds = r.data.map(function (o) { return o.id; });
+      var pr = await supabaseClient.from('payment_records').select('*')
+        .in('order_id', orderIds).order('created_at', { ascending: true });
+      var payMap = {};
+      (pr.data || []).forEach(function (p) {
+        if (!payMap[p.order_id]) payMap[p.order_id] = [];
+        payMap[p.order_id].push(p);
+      });
 
       var fabNames = {};
       if (role === 'customer') {
@@ -105,24 +270,18 @@
 
       list.innerHTML = '';
       r.data.forEach(function (o) {
-        var row = document.createElement('div');
-        row.className = 'ad-row admin-row';
-
-        var info = document.createElement('div');
-        info.className = 'ad-info';
-        var t = document.createElement('strong');
-        t.textContent = o.product_title + ' x ' + o.quantity;
-        info.appendChild(t);
-        line(info, 'Total: KES ' + (Number(o.unit_price_kes) * o.quantity).toLocaleString());
-        line(info, 'Payment method: ' + PAY[o.payment_method]);
+        var row = el('div', 'ad-row admin-row');
+        var info = el('div', 'ad-info');
+        info.appendChild(el('strong', '', o.product_title + ' x ' + o.quantity));
+        line(info, 'Total: ' + money(Number(o.unit_price_kes) * o.quantity));
+        line(info, 'Preferred payment method: ' + PAY[o.payment_method]);
         line(info, 'Location: ' + o.delivery_location);
         if (role === 'fabricator') {
           line(info, 'Customer: ' + (o.customer_name || '-'));
-          var ph = document.createElement('div');
+          var ph = el('div');
           ph.appendChild(document.createTextNode('Phone: '));
-          var a = document.createElement('a');
+          var a = el('a', '', o.customer_phone);
           a.href = 'tel:' + o.customer_phone;
-          a.textContent = o.customer_phone;
           a.style.color = 'var(--copper)';
           ph.appendChild(a);
           info.appendChild(ph);
@@ -131,33 +290,29 @@
         }
         if (o.notes) line(info, 'Notes: ' + o.notes);
         line(info, 'Ordered: ' + new Date(o.created_at).toLocaleString());
-        var tag = document.createElement('span');
-        tag.className = 'status-tag status-' + o.status;
-        tag.textContent = STATUS[o.status];
-        info.appendChild(tag);
+        info.appendChild(el('span', 'status-tag status-' + o.status, STATUS[o.status]));
+        renderTracker(o, info);
+        renderPayments(o, payMap[o.id] || [], info);
 
-        var actions = document.createElement('div');
-        actions.className = 'ad-actions';
-
+        var actions = el('div', 'ad-actions');
         if (role === 'fabricator') {
           (NEXT[o.status] || []).forEach(function (n) {
-            var b = document.createElement('button');
-            b.type = 'button'; b.textContent = n[1];
+            var b = el('button', '', n[1]);
+            b.type = 'button';
             b.addEventListener('click', function () { changeStatus(o.id, n[0]); });
             actions.appendChild(b);
           });
           if (o.status === 'pending' || o.status === 'accepted' || o.status === 'in_progress') {
-            var c = document.createElement('button');
-            c.type = 'button'; c.className = 'danger';
-            c.textContent = o.status === 'pending' ? 'Decline' : 'Cancel';
+            var c = el('button', 'danger', o.status === 'pending' ? 'Decline' : 'Cancel');
+            c.type = 'button';
             c.addEventListener('click', function () {
               if (confirm('Cancel this order?')) changeStatus(o.id, 'cancelled');
             });
             actions.appendChild(c);
           }
         } else if (o.status === 'pending') {
-          var cc = document.createElement('button');
-          cc.type = 'button'; cc.className = 'danger'; cc.textContent = 'Cancel order';
+          var cc = el('button', 'danger', 'Cancel order');
+          cc.type = 'button';
           cc.addEventListener('click', function () {
             if (confirm('Cancel this order?')) changeStatus(o.id, 'cancelled');
           });
