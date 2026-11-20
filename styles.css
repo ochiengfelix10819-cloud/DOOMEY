@@ -538,3 +538,103 @@ h1, h2, h3, p, a, span, div, strong, label {
 .status-reported { background: #7a5a1f; color: #ffe0a3; }
 .status-confirmed { background: #1f7a4d; color: #fff; }
 .status-not_received { background: #7a1f1f; color: #ffc4c4; }
+/* ---------- DASHBOARD: NO EMOJI ICONS ---------- */
+.dash-card .empty-icon { display: none; }
+
+/* ---------- DASHBOARD MOTION ---------- */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes softPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(217, 114, 43, 0.55); }
+  50%      { box-shadow: 0 0 0 8px rgba(217, 114, 43, 0); }
+}
+@keyframes shine {
+  from { background-position: -200% 0; }
+  to   { background-position: 200% 0; }
+}
+
+/* Dashboard cards rise in one after another */
+.dash-header { animation: fadeIn 0.5s ease both; }
+.dash-grid > .dash-card { animation: fadeUp 0.55s ease both; }
+.dash-grid > .dash-card:nth-child(1) { animation-delay: 0.05s; }
+.dash-grid > .dash-card:nth-child(2) { animation-delay: 0.15s; }
+.dash-grid > .dash-card:nth-child(3) { animation-delay: 0.25s; }
+.dash-grid > .dash-card:nth-child(4) { animation-delay: 0.35s; }
+
+.dash-card { transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; }
+.dash-grid > .dash-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--copper);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* Lists: rows slide in with a stagger */
+.ad-row, .conv-row { animation: fadeUp 0.45s ease both; }
+.ad-row:nth-child(2), .conv-row:nth-child(2) { animation-delay: 0.06s; }
+.ad-row:nth-child(3), .conv-row:nth-child(3) { animation-delay: 0.12s; }
+.ad-row:nth-child(4), .conv-row:nth-child(4) { animation-delay: 0.18s; }
+.ad-row:nth-child(5), .conv-row:nth-child(5) { animation-delay: 0.24s; }
+.ad-row:nth-child(n+6), .conv-row:nth-child(n+6) { animation-delay: 0.3s; }
+.conv-row { transition: background 0.25s ease, padding-left 0.25s ease; }
+.conv-row:hover { padding-left: 8px; }
+
+/* Order progress tracker fills step by step */
+.track-step { transition: border-color 0.4s ease, color 0.4s ease; }
+.track-step.done { animation: slideInLeft 0.5s ease both; }
+.track-step.done:nth-child(1) { animation-delay: 0.1s; }
+.track-step.done:nth-child(2) { animation-delay: 0.3s; }
+.track-step.done:nth-child(3) { animation-delay: 0.5s; }
+.track-step.done:nth-child(4) { animation-delay: 0.7s; }
+
+/* Payments, notices and empty states */
+.pay-box { animation: fadeIn 0.6s ease both; }
+.pay-record { animation: fadeUp 0.4s ease both; }
+.message { animation: popIn 0.35s ease both; }
+.empty-state { animation: fadeUp 0.5s ease both; }
+.pay-form { animation: fadeUp 0.35s ease both; }
+
+/* Messages: bubbles pop in from their own side */
+.bubble-wrap.theirs .bubble { animation: slideInLeft 0.3s ease both; }
+.bubble-wrap.mine .bubble { animation: slideInRight 0.3s ease both; }
+
+/* Attention cues */
+.unread-badge { animation: softPulse 1.8s ease-in-out infinite; }
+.status-pending, .status-reported { animation: softPulse 2.4s ease-in-out infinite; }
+.pill-verified {
+  background: linear-gradient(110deg, #1f7a4d 30%, #2fae72 50%, #1f7a4d 70%);
+  background-size: 200% 100%;
+  animation: shine 3.5s linear infinite;
+}
+
+/* Buttons respond to touch and hover */
+.ad-actions a, .ad-actions button, .tabs button, .btn {
+  transition: transform 0.2s ease, background 0.25s ease, color 0.25s ease;
+}
+.ad-actions a:hover, .ad-actions button:hover { transform: translateY(-2px); }
+.ad-actions a:active, .ad-actions button:active, .btn:active { transform: scale(0.96); }
+
+/* Respect people who turn animations off in their device settings */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
