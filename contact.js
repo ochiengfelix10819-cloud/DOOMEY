@@ -1,4 +1,4 @@
-// Call and WhatsApp buttons. Numbers are only revealed to logged-in users.
+// Call, WhatsApp and Message buttons. Numbers are only revealed to logged-in users.
 
 function toIntl(n) {
   n = String(n).replace(/[\s\-()]/g, '');
@@ -22,7 +22,7 @@ async function addContactButtons(container, fabId) {
     a.textContent = 'Log in';
     a.style.color = 'var(--copper)';
     p.appendChild(a);
-    p.appendChild(document.createTextNode(' to call or WhatsApp this fabricator.'));
+    p.appendChild(document.createTextNode(' to call, WhatsApp or message this fabricator.'));
     box.appendChild(p);
     return;
   }
@@ -42,7 +42,7 @@ async function addContactButtons(container, fabId) {
     call.className = 'btn btn-outline';
     call.href = 'tel:+' + toIntl(c.phone);
     call.textContent = 'Call';
-    call.style.marginRight = '8px';
+    call.style.margin = '0 8px 8px 0';
     box.appendChild(call);
   }
   if (c.whatsapp) {
@@ -53,6 +53,14 @@ async function addContactButtons(container, fabId) {
     wa.target = '_blank';
     wa.rel = 'noopener';
     wa.textContent = 'WhatsApp';
+    wa.style.margin = '0 8px 8px 0';
     box.appendChild(wa);
   }
+
+  var msg = document.createElement('a');
+  msg.className = 'btn btn-outline';
+  msg.href = 'messages.html?to=' + encodeURIComponent(fabId);
+  msg.textContent = 'Message';
+  msg.style.marginBottom = '8px';
+  box.appendChild(msg);
 }
