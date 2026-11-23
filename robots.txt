@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard.html
+Disallow: /admin.html
+Disallow: /admin-verifications.html
+Disallow: /messages.html
+Disallow: /my-orders.html
+Disallow: /my-quotations.html
+Sitemap: https://doomey.vercel.app/sitemap.xml
