@@ -638,3 +638,37 @@ h1, h2, h3, p, a, span, div, strong, label {
     transition: none !important;
   }
 }
+/* ---------- INDUSTRIAL BACKGROUND ---------- */
+body { background: #161618; position: relative; }
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    /* warm copper glow in two corners */
+    radial-gradient(ellipse 60% 45% at 100% 0%, rgba(217, 114, 43, 0.16), transparent 70%),
+    radial-gradient(ellipse 55% 40% at 0% 100%, rgba(217, 114, 43, 0.10), transparent 70%),
+    /* rivets at the plate corners */
+    radial-gradient(circle, rgba(255, 255, 255, 0.07) 1.5px, transparent 2.5px) 0 0 / 240px 240px,
+    /* welded plate seams */
+    repeating-linear-gradient(90deg, transparent 0 238px, rgba(0, 0, 0, 0.35) 238px 240px),
+    repeating-linear-gradient(0deg, transparent 0 238px, rgba(0, 0, 0, 0.35) 238px 240px),
+    /* brushed metal grain */
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 4px),
+    linear-gradient(180deg, #1d1d20, #131315);
+}
+
+/* Alternate sections become see-through so the texture shows */
+.alt-bg { background: rgba(42, 42, 45, 0.72); }
+.hero { background-color: transparent; }
+
+/* Soft breathing glow (off for people who disable animations) */
+@keyframes glowShift {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.82; }
+}
+body::before { animation: glowShift 9s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { body::before { animation: none; } }
