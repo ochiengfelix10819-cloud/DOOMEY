@@ -672,3 +672,90 @@ body::before {
 }
 body::before { animation: glowShift 9s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { body::before { animation: none; } }
+/* ---------- WHITE THEME (add at the very bottom of styles.css) ---------- */
+:root {
+  --charcoal: #ffffff;        /* page background */
+  --charcoal-light: #f4f2ee;  /* cards and alternate sections */
+  --white: #1c1c1e;           /* main text */
+  --grey: #5f5f66;            /* secondary text */
+}
+
+body { background: #ffffff; color: #1c1c1e; }
+
+body::before {
+  background:
+    radial-gradient(ellipse 60% 45% at 100% 0%, rgba(217, 114, 43, 0.10), transparent 70%),
+    radial-gradient(ellipse 55% 40% at 0% 100%, rgba(217, 114, 43, 0.07), transparent 70%),
+    repeating-linear-gradient(90deg, transparent 0 238px, rgba(0, 0, 0, 0.045) 238px 240px),
+    repeating-linear-gradient(0deg, transparent 0 238px, rgba(0, 0, 0, 0.045) 238px 240px),
+    #ffffff;
+}
+
+/* Navigation */
+.navbar { background: rgba(255, 255, 255, 0.95); border-bottom: 1px solid #e4e1db; }
+.nav-links a { color: #4a4a50; }
+.nav-links a:hover { color: var(--copper); }
+.nav-links { background-color: transparent; }
+@media (max-width: 768px) {
+  .nav-links { background: #ffffff; border-bottom: 1px solid #e4e1db; }
+}
+
+/* Buttons keep white text on copper */
+.btn, .search-box button, .step-number, .badge, .pill-verified, .tabs button.active { color: #ffffff !important; }
+.btn-outline { color: var(--copper) !important; }
+.btn-outline:hover { color: #ffffff !important; }
+
+/* Cards, borders and forms */
+.alt-bg { background: rgba(244, 242, 238, 0.85); }
+.card, .dash-card, .auth-card, .testimonial { background: #ffffff; border-color: #e4e1db; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); }
+.alt-bg .card { background: #ffffff; }
+.card:hover { box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12); }
+.card-img { background: linear-gradient(135deg, #ece9e3, #dedad2); }
+.auth-card input, .auth-card select, .auth-card textarea,
+.filter-bar input, .filter-bar select, .fab-filter input, .fab-filter select,
+.pay-form input, .pay-form select, .chat-form textarea {
+  background: #ffffff; color: #1c1c1e; border-color: #cfcbc3;
+}
+.ad-row, .pay-record, .conv-row { border-color: #e4e1db; }
+.pay-box { background: #faf9f6; border-color: #e4e1db; }
+.empty-state { border-color: #d6d2ca; }
+.pill-unverified { background: #e4e1db; color: #4a4a50 !important; }
+.section-title p, .auth-sub { color: #5f5f66; }
+
+/* Text that was a light grey on dark */
+.prose p, .prose li { color: #3a3a3e; }
+.price { color: var(--copper-dark); }
+
+/* Call to action stays copper with a dark button */
+.cta, .cta h2, .cta p { color: #ffffff; }
+.cta .btn { background: #1c1c1e; }
+
+/* Footer stays dark for contrast */
+footer { background: #1c1c1e; border-top: 0; }
+footer, footer p, .footer-grid a, .footer-bottom { color: #c9c9cd !important; }
+.footer-grid h4 { color: var(--copper) !important; }
+.footer-grid a:hover { color: #ffffff !important; }
+.footer-bottom { border-color: #333; }
+
+/* Entrance scene stays dark with light text */
+.entrance { background: #ffffff; }
+.entrance-copy, .entrance-copy h1 { color: #ffffff; }
+.entrance-copy .search-box input { color: #1c1c1e; }
+.scroll-cue { color: #d0d0d3; }
+.entrance-reveal h2 { color: #1c1c1e; }
+.entrance-reveal p { color: #5f5f66; }
+
+/* Messages */
+.bubble { background: #ece9e3; color: #1c1c1e; }
+.bubble-wrap.mine .bubble { background: var(--copper); color: #ffffff; }
+.conv-row:hover { background: rgba(217, 114, 43, 0.08); }
+
+/* Order tracker */
+.track-step { border-top-color: #d6d2ca; }
+.track-step.done { color: #1c1c1e; }
+
+/* Alerts */
+.message.error { background: #fde8e8; color: #9b1c1c; }
+.message.success { background: #e3f6ea; color: #14532d; }
+.status-pending, .status-reported { color: #5c3d00; background: #fde9bd; }
+.status-cancelled { background: #e4e1db; color: #4a4a50; }
