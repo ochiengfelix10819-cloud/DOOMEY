@@ -92,7 +92,7 @@
       '<div id="dmBotHead"><div><strong>DOOMEY</strong><small>Helper bot - answers common questions</small></div>' +
       '<button id="dmBotClose" type="button" aria-label="Close chat">&times;</button></div>' +
       '<div id="dmBotLog" aria-live="polite"></div>' +
-      '<form id="dmBotForm"><input id="dmBotIn" type="text" maxlength="200" placeholder="Ask a question or search..." autocomplete="off">' +
+      '<form id="dmBotForm"><input id="dmBotIn" aria-label="Ask DOOMEY helper" type="text" maxlength="200" placeholder="Ask a question or search..." autocomplete="off">' +
       '<button id="dmBotSend" type="submit">Send</button></form>' +
     '</div>' +
     '<button id="dmBotBtn" type="button" aria-label="Open helper chat"><svg width="26" height="26" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M4 3h16a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H9l-5 4v-4H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/></svg></button>';
