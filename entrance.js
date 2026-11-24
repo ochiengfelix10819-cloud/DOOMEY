@@ -15,8 +15,12 @@
 
   // Optional real footage: add images/hero.mp4 to your repo and it plays automatically
   var video = document.getElementById('entranceVideo');
-  fetch('images/hero.mp4', { method: 'HEAD' }).then(function (r) {
-    if (r.ok && video) {       video.src = 'images/hero.mp4';       video.style.display = 'block';       var bg = document.querySelector('.entrance-bg');       if (bg) bg.style.display = 'none';       video.play().catch(function () {});     }
+  // Phones and slow connections get a much smaller copy of the video
+  var conn = navigator.connection || {};
+  var small = window.matchMedia('(max-width: 768px)').matches || conn.saveData === true;
+  var videoFile = small ? 'images/hero-mobile.mp4' : 'images/hero.mp4';
+  fetch(videoFile, { method: 'HEAD' }).then(function (r) {
+    if (r.ok && video) {       video.src = videoFile;       video.style.display = 'block';       var bg = document.querySelector('.entrance-bg');       if (bg) bg.style.display = 'none';       video.play().catch(function () {});     }
   }).catch(function () {});
 
   // ---- Sparks ----
