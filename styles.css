@@ -778,3 +778,9 @@ footer, footer p, .footer-grid a, .footer-bottom { color: #c9c9cd !important; }
 h1.page-title { font-size: 1.5em; margin: 0.83em 0; }
 .auth-card h1.page-title { margin-bottom: 6px; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+/* Accessibility: footer headings follow the heading order; buttons use a darker copper so white text is easy to read */
+.footer-grid h3 { font-size: 1rem; margin-bottom: 12px; color: var(--copper) !important; }
+.btn, .search-box button, .tabs button.active { background: #b85a1c; }
+.btn:hover, .search-box button:hover { background: #9c4a14; }
+.cta { background: linear-gradient(135deg, #a85218, #b85a1c); }
