@@ -814,3 +814,14 @@ h1.page-title { font-size: 1.5em; margin: 0.83em 0; }
 .share-btn:hover, .share-btn:focus-visible { background: #1c1c1e; color: #fff; }
 
 .link-row { display: flex; flex-wrap: wrap; gap: 10px; margin: 14px 0; }
+
+/* Photo viewer */
+.gallery-main.zoomable { cursor: zoom-in; }
+.lb { position: fixed; inset: 0; z-index: 2147483000; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.92); padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
+.lb-img { max-width: 94vw; max-height: 86vh; object-fit: contain; border-radius: 6px; background: #111; }
+.lb-count { position: absolute; left: 0; right: 0; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); text-align: center; color: #fff; font-size: 0.9rem; letter-spacing: 0.08em; }
+.lb-btn { position: absolute; width: 48px; height: 48px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.16); color: #fff; font-size: 2rem; line-height: 1; cursor: pointer; }
+.lb-btn:hover, .lb-btn:focus-visible { background: rgba(255, 255, 255, 0.32); outline: 2px solid #fff; }
+.lb-close { top: calc(12px + env(safe-area-inset-top, 0px)); right: calc(12px + env(safe-area-inset-right, 0px)); }
+.lb-prev { left: calc(10px + env(safe-area-inset-left, 0px)); top: 50%; margin-top: -24px; }
+.lb-next { right: calc(10px + env(safe-area-inset-right, 0px)); top: 50%; margin-top: -24px; }

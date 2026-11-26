@@ -41,6 +41,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4"></script>
   <script src="share.js"></script>
+  <script src="lightbox.js"></script>
   <script src="supabase-config.js"></script>   <script src="contact.js"></script>
   <script>
     function el(tag, cls, text) {
@@ -80,14 +81,29 @@
       var gallery = el('div', 'gallery');
       var main = el('img', 'gallery-main');
       main.alt = p.title;
-      if (imgs.length) main.src = imgs[0].image_url;
+      var current = 0;
+      var urlList = imgs.map(function (i) { return i.image_url; });
+      if (imgs.length) {
+        main.src = urlList[0];
+        main.classList.add('zoomable');
+        main.tabIndex = 0;
+        main.setAttribute('role', 'button');
+        main.setAttribute('aria-label', 'Enlarge photo of ' + p.title);
+        main.addEventListener('click', function () { dmLightbox(urlList, current, p.title); });
+        main.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); dmLightbox(urlList, current, p.title); } });
+      }
       gallery.appendChild(main);
       if (imgs.length > 1) {
         var thumbs = el('div', 'gallery-thumbs');
-        imgs.forEach(function (i) {
+        imgs.forEach(function (i, n) {
           var t = el('img');
-          t.src = i.image_url; t.alt = '';
-          t.addEventListener('click', function () { main.src = i.image_url; });
+          t.src = i.image_url; t.alt = 'Show photo ' + (n + 1) + ' of ' + p.title;
+          t.loading = 'lazy';
+          t.tabIndex = 0;
+          t.setAttribute('role', 'button');
+          function pick() { current = n; main.src = i.image_url; }
+          t.addEventListener('click', pick);
+          t.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
           thumbs.appendChild(t);
         });
         gallery.appendChild(thumbs);
