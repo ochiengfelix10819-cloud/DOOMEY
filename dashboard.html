@@ -105,6 +105,15 @@
         <span id="verifyPill" class="pill"></span>
       </div>
 
+      <div class="dash-card completion" id="completeCard" hidden>
+        <div class="completion-head">
+          <h3>Profile strength</h3>
+          <span id="completePct" class="completion-pct"></span>
+        </div>
+        <div class="completion-bar" role="progressbar" aria-label="Profile completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="completeBar"><span id="completeFill"></span></div>
+        <ul class="completion-list" id="completeList"></ul>
+      </div>
+
       <div class="dash-grid">
         <div class="dash-card">
           <h3>Business Profile</h3>
@@ -257,6 +266,48 @@
       return i === -1 ? null : decodeURIComponent(url.substring(i + 15));
     }
 
+    // Profile strength: shows a fabricator what is still missing
+    function renderCompletion(totalAds, approvedAds) {
+      var d = currentDetails;
+      if (!d) return;
+      var hasLinks = !!(d.website_url || d.facebook_url || d.instagram_url || d.tiktok_url);
+      var items = [
+        { done: true, text: 'Business details, location and map pin saved' },
+        { done: !!(d.service_areas && d.service_areas.trim()), text: 'List the areas where you offer services', action: 'Edit profile', id: 'editProfileBtn' },
+        { done: hasLinks, text: 'Add your website or social media links', action: 'Edit profile', id: 'editProfileBtn' },
+        { done: totalAds > 0, text: 'Post your first product', action: 'Post a product', href: 'post-product.html' },
+        { done: approvedAds > 0, text: 'Get a product approved so customers can see it' },
+        { done: !!d.is_verified, text: 'Get verified to earn the verified badge', action: 'Get verified', href: 'verify.html' }
+      ];
+      var done = items.filter(function (i) { return i.done; }).length;
+      var pct = Math.round(done / items.length * 100);
+      document.getElementById('completePct').textContent = pct + '% complete';
+      document.getElementById('completeFill').style.width = pct + '%';
+      document.getElementById('completeBar').setAttribute('aria-valuenow', String(pct));
+      var ul = document.getElementById('completeList');
+      ul.innerHTML = '';
+      items.forEach(function (i) {
+        var li = document.createElement('li');
+        li.className = i.done ? 'is-done' : 'is-todo';
+        var tag = document.createElement('span');
+        tag.className = 'completion-tag';
+        tag.textContent = i.done ? 'Done' : 'To do';
+        li.appendChild(tag);
+        var t = document.createElement('span');
+        t.textContent = ' ' + i.text + ' ';
+        li.appendChild(t);
+        if (!i.done && i.action) {
+          var a = document.createElement(i.href ? 'a' : 'button');
+          a.className = 'completion-action';
+          a.textContent = i.action;
+          if (i.href) a.href = i.href; else { a.type = 'button'; a.addEventListener('click', function () { document.getElementById(i.id).click(); }); }
+          li.appendChild(a);
+        }
+        ul.appendChild(li);
+      });
+      document.getElementById('completeCard').hidden = false;
+    }
+
     async function loadMyAds() {
       var list = document.getElementById('adsList');
       list.innerHTML = '<div class="dm-loader" role="status"><span class="dm-arc" aria-hidden="true"></span><span class="dm-loader-text">Loading...</span></div>';
@@ -268,6 +319,7 @@
 
       if (r.error) { list.textContent = 'Could not load your ads.'; return; }
       list.innerHTML = '';
+      renderCompletion(r.data.length, r.data.filter(function (p) { return p.status === 'approved'; }).length);
       if (r.data.length === 0) {
         list.textContent = 'You have not posted anything yet.';
         return;
