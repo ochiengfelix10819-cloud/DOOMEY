@@ -40,6 +40,7 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4"></script>
+  <script src="seo.js"></script>
   <script src="share.js"></script>
   <script src="lightbox.js"></script>
   <script src="supabase-config.js"></script>   <script src="contact.js"></script>
@@ -73,6 +74,30 @@
       var fab = f.data;
 
       var imgs = (p.product_images || []).sort(function (a, b) { return a.sort_order - b.sort_order; });
+
+      // Canonical address and structured data for search engines
+      var pageUrl = window.location.origin + window.location.pathname + '?id=' + encodeURIComponent(p.id);
+      dmSetSeo({
+        url: pageUrl,
+        title: p.title + ' | DOOMEY',
+        description: p.title + ' - KES ' + Number(p.price_kes).toLocaleString() + '. ' + (p.description || ''),
+        jsonld: {
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: p.title,
+          description: p.description || p.title,
+          image: imgs.map(function (i) { return i.image_url; }),
+          category: p.product_categories ? p.product_categories.name : undefined,
+          url: pageUrl,
+          offers: {
+            '@type': 'Offer',
+            priceCurrency: 'KES',
+            price: String(p.price_kes),
+            url: pageUrl,
+            seller: fab ? { '@type': 'Organization', name: fab.business_name } : undefined
+          }
+        }
+      });
 
       content.innerHTML = '';
       var wrap = el('div', 'product-layout');

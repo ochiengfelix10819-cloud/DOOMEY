@@ -10,6 +10,7 @@
   <meta property="og:title" content="Explore Products | DOOMEY">
   <meta property="og:description" content="Browse gates, window grills, staircases, carports and other metalwork from fabricators across Kenya.">
   <meta property="og:url" content="https://doomey.vercel.app/explore.html">
+  <link rel="canonical" href="https://doomey.vercel.app/explore.html">
   <meta property="og:image" content="https://doomey.vercel.app/images/categories/gates-and-doors.jpg">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -49,7 +50,7 @@
     </form>
 
     <p id="count" class="auth-sub"></p>
-    <div id="grid" class="grid-3">Loading...</div>
+    <div id="grid" class="grid-3"><div class="dm-loader" role="status"><span class="dm-arc" aria-hidden="true"></span><span class="dm-loader-text">Loading...</span></div></div>
   </main>
   <div id="siteFooter"></div>
 
@@ -83,7 +84,7 @@
 
     async function loadProducts() {
       var grid = document.getElementById('grid');
-      grid.textContent = 'Loading...';
+      grid.innerHTML = '<div class="dm-loader" role="status"><span class="dm-arc" aria-hidden="true"></span><span class="dm-loader-text">Loading...</span></div>';
 
       var q = document.getElementById('q').value.trim();
       var cat = document.getElementById('category').value;

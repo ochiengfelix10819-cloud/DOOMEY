@@ -42,6 +42,7 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4"></script>
+  <script src="seo.js"></script>
   <script src="share.js"></script>
   <script src="supabase-config.js"></script>   <script src="contact.js"></script>   <script src="contact.js"></script>
   <script>
@@ -63,6 +64,24 @@
       if (r.error || !r.data || !r.data.business_name) { content.textContent = 'This fabricator was not found.'; return; }
       var f = r.data;
       document.title = f.business_name + ' | DOOMEY';
+
+      var pageUrl = window.location.origin + window.location.pathname + '?id=' + encodeURIComponent(f.id);
+      var sameAs = [f.website_url, f.facebook_url, f.instagram_url, f.tiktok_url].filter(function (u) { return u && /^https:\/\//i.test(u); });
+      dmSetSeo({
+        url: pageUrl,
+        title: f.business_name + ' | DOOMEY',
+        description: f.business_name + ' - welding and fabrication in ' + f.town + ', ' + f.county + '. ' + (f.skills || ''),
+        jsonld: {
+          '@context': 'https://schema.org',
+          '@type': 'LocalBusiness',
+          name: f.business_name,
+          url: pageUrl,
+          description: f.skills || undefined,
+          address: { '@type': 'PostalAddress', streetAddress: f.workshop_address || undefined, addressLocality: f.town, addressRegion: f.county, addressCountry: 'KE' },
+          geo: (f.latitude != null && f.longitude != null) ? { '@type': 'GeoCoordinates', latitude: f.latitude, longitude: f.longitude } : undefined,
+          sameAs: sameAs.length ? sameAs : undefined
+        }
+      });
 
       content.innerHTML = '';
       var head = el('div', 'dash-header');
