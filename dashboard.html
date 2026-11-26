@@ -22,7 +22,7 @@
   <main class="container dash-wrap">
 
     <div id="loadingView" class="auth-card" style="margin:0 auto">
-      <h2>Loading...</h2>
+      <div class="dm-loader" role="status"><span class="dm-arc" aria-hidden="true"></span><span class="dm-loader-text">Loading...</span></div>
     </div>
 
     <div id="simpleView" class="auth-card" style="margin:0 auto; display:none">
@@ -75,6 +75,18 @@
 
         <label for="serviceAreas">Areas where you offer services</label>
         <textarea id="serviceAreas" rows="2" maxlength="300" placeholder="e.g. Nairobi, Kiambu, Machakos"></textarea>
+
+        <label for="websiteUrl">Your website (optional)</label>
+        <input type="text" id="websiteUrl" maxlength="200" placeholder="https://www.example.co.ke">
+
+        <label for="facebookUrl">Facebook page (optional)</label>
+        <input type="text" id="facebookUrl" maxlength="200" placeholder="https://facebook.com/yourpage">
+
+        <label for="instagramUrl">Instagram (optional)</label>
+        <input type="text" id="instagramUrl" maxlength="200" placeholder="https://instagram.com/yourname">
+
+        <label for="tiktokUrl">TikTok (optional)</label>
+        <input type="text" id="tiktokUrl" maxlength="200" placeholder="https://tiktok.com/@yourname">
 
         <label>Pin your workshop on the map *</label>
         <p class="map-hint">Tap or click the map to drop a pin. Drag the pin to adjust it.</p>
@@ -207,6 +219,10 @@
         document.getElementById('area').value = currentDetails.area || '';
         document.getElementById('address').value = currentDetails.workshop_address || '';
         document.getElementById('serviceAreas').value = currentDetails.service_areas || '';
+        document.getElementById('websiteUrl').value = currentDetails.website_url || '';
+        document.getElementById('facebookUrl').value = currentDetails.facebook_url || '';
+        document.getElementById('instagramUrl').value = currentDetails.instagram_url || '';
+        document.getElementById('tiktokUrl').value = currentDetails.tiktok_url || '';
       }
       document.getElementById('phone').value = currentProfile.phone || '';
       show('profileView');
@@ -243,7 +259,7 @@
 
     async function loadMyAds() {
       var list = document.getElementById('adsList');
-      list.textContent = 'Loading...';
+      list.innerHTML = '<div class="dm-loader" role="status"><span class="dm-arc" aria-hidden="true"></span><span class="dm-loader-text">Loading...</span></div>';
       var r = await supabaseClient
         .from('products')
         .select('id, title, price_kes, status, rejection_reason, video_url, product_images(image_url, sort_order)')
@@ -390,6 +406,25 @@
       if (!document.getElementById('county').value) { showMessage('Please select your county.', true); return; }
       if (pinLat === null) { showMessage('Please tap the map to pin your workshop location.', true); return; }
 
+      // Optional links: only secure https addresses are saved
+      function cleanLink(id, label) {
+        var v = document.getElementById(id).value.trim();
+        if (!v) return { ok: true, value: null };
+        if (/^http:\/\//i.test(v)) v = 'https://' + v.slice(7);
+        else if (!/^https:\/\//i.test(v)) v = 'https://' + v;
+        var okUrl = false;
+        try { var u = new URL(v); okUrl = u.protocol === 'https:' && u.hostname.indexOf('.') > 0; } catch (err) {}
+        if (!okUrl || v.length > 200 || /\s/.test(v)) {
+          showMessage(label + ' link does not look right. Paste the full address, for example https://facebook.com/yourpage', true);
+          return { ok: false };
+        }
+        return { ok: true, value: v };
+      }
+      var linkWebsite = cleanLink('websiteUrl', 'Website');   if (!linkWebsite.ok) return;
+      var linkFacebook = cleanLink('facebookUrl', 'Facebook'); if (!linkFacebook.ok) return;
+      var linkInstagram = cleanLink('instagramUrl', 'Instagram'); if (!linkInstagram.ok) return;
+      var linkTiktok = cleanLink('tiktokUrl', 'TikTok');       if (!linkTiktok.ok) return;
+
       setLoading(btn, true, 'Save Profile');
 
       var details = {
@@ -401,6 +436,10 @@
         area: document.getElementById('area').value.trim(),
         workshop_address: document.getElementById('address').value.trim(),
         service_areas: document.getElementById('serviceAreas').value.trim(),
+        website_url: linkWebsite.value,
+        facebook_url: linkFacebook.value,
+        instagram_url: linkInstagram.value,
+        tiktok_url: linkTiktok.value,
         latitude: pinLat,
         longitude: pinLng
       };

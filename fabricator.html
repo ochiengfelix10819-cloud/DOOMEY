@@ -58,7 +58,7 @@
       if (!id) { content.textContent = 'No fabricator selected.'; return; }
 
       var r = await supabaseClient.from('fabricator_details')
-        .select('id, business_name, skills, experience_years, county, town, area, workshop_address, service_areas, is_verified, latitude, longitude')
+        .select('id, business_name, skills, experience_years, county, town, area, workshop_address, service_areas, is_verified, latitude, longitude, website_url, facebook_url, instagram_url, tiktok_url')
         .eq('id', id).maybeSingle();
       if (r.error || !r.data || !r.data.business_name) { content.textContent = 'This fabricator was not found.'; return; }
       var f = r.data;
@@ -82,6 +82,17 @@
       about.appendChild(el('p', '', 'Skills: ' + f.skills));
       if (f.service_areas) about.appendChild(el('p', '', 'Serves: ' + f.service_areas));
       about.appendChild(el('p', '', 'Workshop: ' + f.workshop_address));
+      var onlineLinks = [['Website', f.website_url], ['Facebook', f.facebook_url], ['Instagram', f.instagram_url], ['TikTok', f.tiktok_url]]
+        .filter(function (x) { return x[1] && /^https:\/\//i.test(x[1]); });
+      if (onlineLinks.length) {
+        var linkRow = el('div', 'link-row');
+        onlineLinks.forEach(function (x) {
+          var a2 = el('a', 'share-btn', x[0]);
+          a2.href = x[1]; a2.target = '_blank'; a2.rel = 'noopener noreferrer nofollow';
+          linkRow.appendChild(a2);
+        });
+        about.appendChild(linkRow);
+      }
       var quoteBtn = el('a', 'btn', 'Request a Quotation');       quoteBtn.href = 'request-quote.html?fabricator=' + f.id;       quoteBtn.style.marginTop = '10px';       about.appendChild(quoteBtn);       addContactButtons(about, f.id);
       grid.appendChild(about);
 
