@@ -784,3 +784,25 @@ h1.page-title { font-size: 1.5em; margin: 0.83em 0; }
 .btn, .search-box button, .tabs button.active { background: #b85a1c; }
 .btn:hover, .search-box button:hover { background: #9c4a14; }
 .cta { background: linear-gradient(135deg, #a85218, #b85a1c); }
+
+/* Loading animation: a welding arc sweeping along a weld bead */
+.dm-loader { grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 30px 0; color: var(--grey); }
+.dm-arc { position: relative; display: block; width: 160px; height: 6px; border-radius: 3px; background: rgba(120, 120, 120, 0.22); }
+.dm-arc::before { content: ""; position: absolute; inset: 0; border-radius: 3px; background: linear-gradient(90deg, #8a3f0f, #d9722b 70%, #ffb347); transform-origin: left; transform: scaleX(0); animation: dmBead 1.7s ease-in-out infinite; }
+.dm-arc::after { content: ""; position: absolute; top: 50%; left: 0; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%; background: radial-gradient(circle, #fff 0 18%, #ffe08a 38%, #ff9a2e 62%, transparent 72%); box-shadow: 0 0 14px 5px rgba(255, 150, 40, 0.65); animation: dmSpark 1.7s ease-in-out infinite, dmFlicker 0.16s steps(2) infinite; }
+.dm-loader-text { font-size: 0.85rem; letter-spacing: 0.12em; text-transform: uppercase; }
+@keyframes dmBead { 0% { transform: scaleX(0); opacity: 1; } 78% { transform: scaleX(1); opacity: 1; } 100% { transform: scaleX(1); opacity: 0; } }
+@keyframes dmSpark { 0% { left: 0; opacity: 1; } 78% { left: 100%; opacity: 1; } 100% { left: 100%; opacity: 0; } }
+@keyframes dmFlicker { 0% { filter: brightness(1); } 100% { filter: brightness(1.35); } }
+@media (prefers-reduced-motion: reduce) {
+  .dm-arc::before { animation: none; transform: scaleX(0.6); }
+  .dm-arc::after { animation: none; left: 60%; }
+}
+
+/* Founding Fabricators banner */
+.cta-eyebrow { display: inline-block; margin-bottom: 12px; padding: 4px 12px; border: 1px solid rgba(255,255,255,0.7); border-radius: 999px; font-size: 0.8rem; letter-spacing: 0.14em; text-transform: uppercase; color: #fff; }
+.founding-meter { max-width: 420px; margin: 0 auto 24px; }
+.founding-bar { height: 10px; border-radius: 5px; background: rgba(255,255,255,0.28); overflow: hidden; }
+.founding-bar span { display: block; height: 100%; width: 0; border-radius: 5px; background: #fff; transition: width 0.9s ease; }
+.cta .founding-text { margin: 10px 0 0; font-size: 0.95rem; color: #fff; }
+@media (prefers-reduced-motion: reduce) { .founding-bar span { transition: none; } }

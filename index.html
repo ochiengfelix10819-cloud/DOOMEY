@@ -96,7 +96,7 @@
         <h2>Featured Products</h2>
         <p>Work from verified fabricators</p>
       </div>
-      <div class="grid-3" id="featuredGrid">Loading...</div>
+      <div class="grid-3" id="featuredGrid"><div class="dm-loader" role="status"><span class="dm-arc" aria-hidden="true"></span><span class="dm-loader-text">Loading...</span></div></div>
     </div>
   </section>
 
@@ -106,7 +106,7 @@
         <h2>Verified Fabricators</h2>
         <p>Identity checked by the DOOMEY team</p>
       </div>
-      <div class="grid-3" id="fabGrid">Loading...</div>
+      <div class="grid-3" id="fabGrid"><div class="dm-loader" role="status"><span class="dm-arc" aria-hidden="true"></span><span class="dm-loader-text">Loading...</span></div></div>
     </div>
   </section>
 
@@ -116,7 +116,7 @@
         <h2>Recently Added</h2>
         <p>The newest work from fabricators across Kenya</p>
       </div>
-      <div class="grid-3" id="recentGrid">Loading...</div>
+      <div class="grid-3" id="recentGrid"><div class="dm-loader" role="status"><span class="dm-arc" aria-hidden="true"></span><span class="dm-loader-text">Loading...</span></div></div>
     </div>
   </section>
 
@@ -137,9 +137,14 @@
 
   <section class="cta" id="become">
     <div class="container">
-      <h2>Are You a Welder or Fabricator?</h2>
-      <p>Showcase your work, reach new customers and grow your business on DOOMEY.</p>
-      <a href="register-fabricator.html" class="btn">Become a Fabricator</a>
+      <span class="cta-eyebrow">Founding Fabricators</span>
+      <h2>Join DOOMEY's First 50 Founding Fabricators</h2>
+      <p>Are you a welder or fabricator? Showcase your work, reach new customers and grow your business. Joining is free.</p>
+      <div class="founding-meter" id="foundingMeter" hidden>
+        <div class="founding-bar" role="progressbar" aria-label="Founding fabricator spots taken" aria-valuemin="0" aria-valuemax="50" aria-valuenow="0" id="foundingBar"><span id="foundingFill"></span></div>
+        <p class="founding-text" id="foundingText"></p>
+      </div>
+      <a href="register-fabricator.html" class="btn">Join as a Founding Fabricator</a>
     </div>
   </section>
 
@@ -273,7 +278,23 @@
       }
     }
 
+    // Founding fabricators counter: a real count of registered fabricators
+    async function loadFounding() {
+      try {
+        var r = await supabaseClient.from('fabricator_details').select('id', { count: 'exact', head: true });
+        if (r.error || typeof r.count !== 'number') return;
+        var n = Math.min(r.count, 50);
+        document.getElementById('foundingFill').style.width = (n / 50 * 100) + '%';
+        document.getElementById('foundingBar').setAttribute('aria-valuenow', String(n));
+        document.getElementById('foundingText').textContent = r.count >= 50
+          ? 'All 50 founding spots are taken. Join anyway and grow with us.'
+          : n + ' of 50 founding spots taken. ' + (50 - n) + ' left.';
+        document.getElementById('foundingMeter').hidden = false;
+      } catch (e) { /* counter stays hidden if it cannot load */ }
+    }
+
     loadHome();
+    loadFounding();
   </script>
   <script src="bot.js"></script>
 </body>
