@@ -37,11 +37,12 @@
   <main class="container dash-wrap">
     <h1 class="sr-only">Fabricator profile</h1>
     <p><a href="find-welder.html" style="color:var(--copper)">&larr; Back to fabricators</a></p>
-    <div id="content">Loading...</div>
+    <div id="content"><div class="dm-loader" role="status"><span class="dm-arc" aria-hidden="true"></span><span class="dm-loader-text">Loading...</span></div></div>
   </main>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4"></script>
+  <script src="share.js"></script>
   <script src="supabase-config.js"></script>   <script src="contact.js"></script>   <script src="contact.js"></script>
   <script>
     function el(tag, cls, text) {
@@ -71,6 +72,7 @@
       head.appendChild(left);
       if (f.is_verified) head.appendChild(el('span', 'pill pill-verified', '\u2714 VERIFIED'));
       content.appendChild(head);
+      dmAddShare(content, f.business_name);
 
       var grid = el('div', 'dash-grid');
 
@@ -104,7 +106,7 @@
       var title = el('h3', '', 'Products');
       title.style.margin = '30px 0 14px';
       content.appendChild(title);
-      var pg = el('div', 'grid-3', 'Loading...');
+      var pg = el('div', 'grid-3'); pg.innerHTML = '<div class="dm-loader" role="status"><span class="dm-arc" aria-hidden="true"></span><span class="dm-loader-text">Loading...</span></div>';
       content.appendChild(pg);
 
       var p = await supabaseClient.from('products')

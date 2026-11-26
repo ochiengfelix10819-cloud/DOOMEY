@@ -36,10 +36,11 @@
   <main class="container dash-wrap">
     <h1 class="sr-only">Product details</h1>
     <p><a href="explore.html" style="color:var(--copper)">&larr; Back to products</a></p>
-    <div id="content">Loading...</div>
+    <div id="content"><div class="dm-loader" role="status"><span class="dm-arc" aria-hidden="true"></span><span class="dm-loader-text">Loading...</span></div></div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4"></script>
+  <script src="share.js"></script>
   <script src="supabase-config.js"></script>   <script src="contact.js"></script>
   <script>
     function el(tag, cls, text) {
@@ -121,6 +122,7 @@
         var orderBtn = el('a', 'btn', 'Order This Product');         orderBtn.href = 'order.html?product=' + p.id;         orderBtn.style.marginTop = '12px';         fc.appendChild(orderBtn);         var quoteBtn = el('a', 'btn btn-outline', 'Request a Quotation');         quoteBtn.href = 'request-quote.html?fabricator=' + fab.id;         quoteBtn.style.margin = '12px 0 0 8px';         fc.appendChild(quoteBtn);         addContactButtons(fc, fab.id);        
       }
 
+      dmAddShare(info, p.title);
       wrap.appendChild(gallery);
       wrap.appendChild(info);
       content.appendChild(wrap);
