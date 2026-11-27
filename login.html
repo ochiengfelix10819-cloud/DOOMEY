@@ -14,40 +14,120 @@
   <meta property="og:image" content="https://doomey.vercel.app/images/categories/gates-and-doors.jpg">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="login.css">
 </head>
-<body>
-  <header class="navbar">
-    <div class="container nav-inner">
-      <a href="index.html" class="logo">DOOMEY</a>
-    </div>
+<body class="lg">
+  <div class="lg-bg" aria-hidden="true"><div class="lg-orb a"></div><div class="lg-orb b"></div><div class="lg-orb c"></div><div class="lg-grid"></div><div id="embers"></div></div>
+
+  <header class="lg-top">
+    <a href="index.html" class="lg-logo">DOOMEY</a>
+    <a href="index.html" class="lg-back">Back to website</a>
   </header>
 
-  <main class="auth-wrap">
-    <div class="auth-card">
-      <h1 class="page-title">Welcome Back</h1>
-      <p class="auth-sub">Log in to your DOOMEY account.</p>
-      <div id="message" class="message" style="display:none"></div>
-      <form id="authForm">
-        <label for="email">Email</label>
-        <input type="email" id="email" required>
-        <label for="password">Password</label>
-        <input type="password" id="password" required>
-        <button type="submit" class="btn">Log In</button>
-      </form>
-      <p class="auth-switch">New here? <a href="register-customer.html">Register as a Customer</a></p>
-      <p class="auth-switch">Welder? <a href="register-fabricator.html">Register as a Fabricator</a></p>
+  <main class="lg-main">
+    <div class="lg-card">
+      <div id="message" class="message" style="display:none" role="status" aria-live="polite"></div>
+
+      <section id="loginView">
+        <span class="lg-eyebrow">Log in</span>
+        <h1 class="lg-title">Welcome back</h1>
+        <p class="lg-sub">Log in to manage your orders, quotes and listings.</p>
+        <form id="authForm" novalidate>
+          <label class="lg-label" for="email">Email</label>
+          <input class="lg-input" type="email" id="email" autocomplete="email" placeholder="you@example.com" required>
+          <label class="lg-label" for="password">Password</label>
+          <div class="lg-pass">
+            <input class="lg-input" type="password" id="password" autocomplete="current-password" placeholder="Your password" required>
+            <button type="button" class="lg-eye" data-target="password" aria-label="Show password" aria-pressed="false">
+              <svg class="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.7 10.7 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.1M6.6 6.6A17.2 17.2 0 0 0 2 12s3.6 7 10 7c1.8 0 3.4-.5 4.8-1.2"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
+            </button>
+          </div>
+          <div class="lg-row">
+            <label class="lg-check"><input type="checkbox" id="remember" checked><span class="lg-box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>Remember me</label>
+            <button type="button" class="lg-link" id="showForgot">Forgot password?</button>
+          </div>
+          <button type="submit" class="lg-btn">Log In</button>
+        </form>
+      </section>
+
+      <section id="forgotView" hidden>
+        <span class="lg-eyebrow">Password help</span>
+        <h1 class="lg-title">Reset password</h1>
+        <p class="lg-sub">Enter your email and we will send you a link to choose a new password.</p>
+        <form id="forgotForm" novalidate>
+          <label class="lg-label" for="resetEmail">Email</label>
+          <input class="lg-input" type="email" id="resetEmail" autocomplete="email" placeholder="you@example.com" required>
+          <div class="lg-row"><span></span><button type="button" class="lg-link" id="backToLogin">Back to log in</button></div>
+          <button type="submit" class="lg-btn" id="resetBtn">Send reset link</button>
+        </form>
+      </section>
     </div>
+
+    <nav class="lg-choices" aria-label="Create an account">
+      <a class="lg-choice" href="register-customer.html"><small>New here?</small><strong>I need work done</strong><span>Create a customer account</span></a>
+      <a class="lg-choice" href="register-fabricator.html"><small>Welder or fabricator?</small><strong>I offer services</strong><span>Join DOOMEY free</span></a>
+    </nav>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4"></script>
   <script src="supabase-config.js"></script>
   <script src="auth.js"></script>
   <script>
+    // Show or hide password
+    document.querySelectorAll('.lg-eye').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var input = document.getElementById(b.getAttribute('data-target'));
+        var show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        b.setAttribute('aria-pressed', show ? 'true' : 'false');
+        b.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+      });
+    });
+
+    // Switch between log in and forgot password
+    function showView(forgot) {
+      document.getElementById('loginView').hidden = forgot;
+      document.getElementById('forgotView').hidden = !forgot;
+      document.getElementById('message').style.display = 'none';
+      if (forgot) {
+        var e = document.getElementById('email').value.trim();
+        if (e) document.getElementById('resetEmail').value = e;
+        document.getElementById('resetEmail').focus();
+      } else {
+        document.getElementById('email').focus();
+      }
+    }
+    document.getElementById('showForgot').addEventListener('click', function () { showView(true); });
+    document.getElementById('backToLogin').addEventListener('click', function () { showView(false); });
+    if (window.location.hash === '#forgot') showView(true);
+
     document.getElementById('authForm').addEventListener('submit', function (e) {
       e.preventDefault();
       loginUser();
     });
+    document.getElementById('forgotForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      requestPasswordReset();
+    });
+
+    // Slow rising embers (skipped when the visitor prefers less motion)
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      var wrap = document.getElementById('embers');
+      for (var i = 0; i < 16; i++) {
+        var s = document.createElement('span');
+        s.className = 'lg-ember';
+        s.style.left = (Math.random() * 100) + '%';
+        var size = 2 + Math.random() * 4;
+        s.style.width = size + 'px'; s.style.height = size + 'px';
+        s.style.animationDuration = (9 + Math.random() * 12) + 's';
+        s.style.animationDelay = (-Math.random() * 18) + 's';
+        wrap.appendChild(s);
+      }
+    }
   </script>
 </body>
 </html>
