@@ -130,11 +130,11 @@
       var bizPath = bizFile ? userId + '/' + requestId + '-business.' + TYPES[bizFile.type] : null;
 
       var up = await supabaseClient.storage.from('verification-docs').upload(idPath, idFile, { contentType: idFile.type });
-      if (up.error) { setLoading(btn, false, label); showMessage('Upload failed: ' + up.error.message, true); return; }
+      if (up.error) { setLoading(btn, false, label); showMessage('Upload failed: ' + dmErr(up.error), true); return; }
 
       if (bizFile) {
         var up2 = await supabaseClient.storage.from('verification-docs').upload(bizPath, bizFile, { contentType: bizFile.type });
-        if (up2.error) { setLoading(btn, false, label); showMessage('Upload failed: ' + up2.error.message, true); return; }
+        if (up2.error) { setLoading(btn, false, label); showMessage('Upload failed: ' + dmErr(up2.error), true); return; }
       }
 
       var ins = await supabaseClient.from('verification_requests').insert({
@@ -149,7 +149,7 @@
       });
 
       setLoading(btn, false, label);
-      if (ins.error) { showMessage('Could not submit: ' + ins.error.message, true); return; }
+      if (ins.error) { showMessage('Could not submit: ' + dmErr(ins.error), true); return; }
 
       showMessage('Submitted! Redirecting...', false);
       setTimeout(function () { window.location.href = 'dashboard.html'; }, 1500);

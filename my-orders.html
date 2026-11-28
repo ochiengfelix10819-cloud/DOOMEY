@@ -25,7 +25,7 @@
     <div id="notifBox" class="dash-card" style="display:none;margin:14px 0"></div>
     <div id="adminMsg" class="message" style="display:none"></div>
     <p class="auth-sub">Payments are made directly between customer and fabricator. DOOMEY does not hold payments. A payment counts as received only after the fabricator confirms it.</p>
-    <div class="dash-card" id="list">Loading...</div>
+    <div class="dash-card" id="list"><div class="dm-loader" role="status"><span class="dm-arc" aria-hidden="true"></span><span class="dm-loader-text">Loading...</span></div></div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4"></script>
@@ -66,14 +66,14 @@
 
     async function changeStatus(id, status) {
       var r = await supabaseClient.from('orders').update({ status: status }).eq('id', id);
-      if (r.error) { note('Could not update: ' + r.error.message, true); return; }
+      if (r.error) { note('Could not update: ' + dmErr(r.error), true); return; }
       note('Order updated.', false);
       loadOrders();
     }
 
     async function changePayment(id, status) {
       var r = await supabaseClient.from('payment_records').update({ status: status }).eq('id', id);
-      if (r.error) { note('Could not update payment: ' + r.error.message, true); return; }
+      if (r.error) { note('Could not update payment: ' + dmErr(r.error), true); return; }
       note(status === 'confirmed' ? 'Payment confirmed.' : 'Payment marked as not received.', false);
       loadOrders();
     }
@@ -134,8 +134,8 @@
         submit.disabled = false;
         submit.textContent = label;
         if (res.error) {
-          var msg = res.error.message || '';
-          if (msg.toLowerCase().indexOf('duplicate') !== -1) msg = 'That M-Pesa code is already used on another payment record.';
+          var msg = dmErr(res.error);
+          if ((res.error.message || '').toLowerCase().indexOf('duplicate') !== -1) msg = 'That M-Pesa code is already used on another payment record.';
           note('Could not save payment: ' + msg, true);
           return;
         }
@@ -239,12 +239,12 @@
 
     async function loadOrders() {
       var list = document.getElementById('list');
-      list.textContent = 'Loading...';
+      list.innerHTML = '<div class="dm-loader" role="status"><span class="dm-arc" aria-hidden="true"></span><span class="dm-loader-text">Loading...</span></div>';
 
       var q = supabaseClient.from('orders').select('*').order('created_at', { ascending: false });
       q = (role === 'fabricator') ? q.eq('fabricator_id', uid) : q.eq('customer_id', uid);
       var r = await q;
-      if (r.error) { list.textContent = 'Could not load orders: ' + r.error.message; return; }
+      if (r.error) { list.textContent = 'Could not load orders: ' + dmErr(r.error); return; }
       if (!r.data.length) {
         list.innerHTML = role === 'fabricator'
           ? '<div class="empty-state"><div class="empty-icon">\uD83D\uDCE6</div><h3>No orders yet</h3><p>New customer orders will appear here.</p></div>'

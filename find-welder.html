@@ -108,7 +108,7 @@
       if (town) query = query.ilike('town', '%' + town.replace(/[,()%]/g, ' ') + '%');
 
       var r = await query.limit(100);
-      if (r.error) { grid.textContent = 'Could not load: ' + r.error.message; return; }
+      if (r.error) { grid.textContent = 'Could not load: ' + dmErr(r.error); return; }
 
       var list = r.data;
       if (userPos) {

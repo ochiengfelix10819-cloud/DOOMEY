@@ -22,7 +22,7 @@
   <main class="auth-wrap">
     <div class="auth-card wide">
       <h2>Request a Quotation</h2>
-      <div id="summary" class="dash-card" style="margin:12px 0">Loading...</div>
+      <div id="summary" class="dash-card" style="margin:12px 0"><div class="dm-loader" role="status"><span class="dm-arc" aria-hidden="true"></span><span class="dm-loader-text">Loading...</span></div></div>
       <div id="message" class="message" style="display:none"></div>
 
       <form id="quoteForm" style="display:none">
@@ -195,7 +195,7 @@
       for (var i = 0; i < photos.length; i++) {
         var path = userId + '/' + quoteId + '/' + Date.now() + '-' + i + '.jpg';
         var up = await supabaseClient.storage.from('quotation-refs').upload(path, photos[i].blob, { contentType: 'image/jpeg' });
-        if (up.error) { setLoading(btn, false, 'Send Request'); showMessage('Picture upload failed: ' + up.error.message, true); return; }
+        if (up.error) { setLoading(btn, false, 'Send Request'); showMessage('Picture upload failed: ' + dmErr(up.error), true); return; }
         paths.push(path);
       }
 
@@ -213,7 +213,7 @@
       });
       setLoading(btn, false, 'Send Request');
 
-      if (r.error) { showMessage('Could not send request: ' + r.error.message, true); return; }
+      if (r.error) { showMessage('Could not send request: ' + dmErr(r.error), true); return; }
       showMessage('Request sent! Redirecting...', false);
       setTimeout(function () { window.location.href = 'my-quotations.html'; }, 1200);
     });

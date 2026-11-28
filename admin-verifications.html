@@ -27,7 +27,7 @@
       <button type="button" data-status="rejected">Rejected</button>
     </div>
     <div id="adminMsg" class="message" style="display:none"></div>
-    <div class="dash-card" id="list">Loading...</div>
+    <div class="dash-card" id="list"><div class="dm-loader" role="status"><span class="dm-arc" aria-hidden="true"></span><span class="dm-loader-text">Loading...</span></div></div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4"></script>
@@ -54,13 +54,13 @@
     async function openDoc(path) {
       var w = window.open('', '_blank');
       var r = await supabaseClient.storage.from('verification-docs').createSignedUrl(path, 300);
-      if (r.error) { if (w) w.close(); note('Could not open document: ' + r.error.message, true); return; }
+      if (r.error) { if (w) w.close(); note('Could not open document: ' + dmErr(r.error), true); return; }
       if (w) w.location.href = r.data.signedUrl;
     }
 
     async function decide(id, approve, reason) {
       var r = await supabaseClient.rpc('review_verification', { req_id: id, approve: approve, reason: reason });
-      if (r.error) { note('Could not save decision: ' + r.error.message, true); return; }
+      if (r.error) { note('Could not save decision: ' + dmErr(r.error), true); return; }
       note(approve ? 'Fabricator verified.' : 'Application rejected.', false);
       loadList();
     }
@@ -73,11 +73,11 @@
 
     async function loadList() {
       var list = document.getElementById('list');
-      list.textContent = 'Loading...';
+      list.innerHTML = '<div class="dm-loader" role="status"><span class="dm-arc" aria-hidden="true"></span><span class="dm-loader-text">Loading...</span></div>';
 
       var r = await supabaseClient.from('verification_requests')
         .select('*').eq('status', currentStatus).order('created_at', { ascending: false });
-      if (r.error) { list.textContent = 'Could not load: ' + r.error.message; return; }
+      if (r.error) { list.textContent = 'Could not load: ' + dmErr(r.error); return; }
       if (r.data.length === 0) { list.textContent = 'No ' + currentStatus + ' applications.'; return; }
 
       var ids = r.data.map(function (x) { return x.fabricator_id; });

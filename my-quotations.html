@@ -24,7 +24,7 @@
     <h2 id="pageTitle">My Quotations</h2>
     <div id="adminMsg" class="message" style="display:none"></div>
     <p class="auth-sub">Quotes are estimates from the fabricator. Payment is made directly to the fabricator. DOOMEY does not hold payments.</p>
-    <div class="dash-card" id="list">Loading...</div>
+    <div class="dash-card" id="list"><div class="dm-loader" role="status"><span class="dm-arc" aria-hidden="true"></span><span class="dm-loader-text">Loading...</span></div></div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4"></script>
@@ -49,7 +49,7 @@
 
     async function update(id, fields, doneText) {
       var r = await supabaseClient.from('quotations').update(fields).eq('id', id);
-      if (r.error) { note('Could not update: ' + r.error.message, true); return; }
+      if (r.error) { note('Could not update: ' + dmErr(r.error), true); return; }
       note(doneText, false);
       loadQuotes();
     }
@@ -66,12 +66,12 @@
 
     async function loadQuotes() {
       var list = document.getElementById('list');
-      list.textContent = 'Loading...';
+      list.innerHTML = '<div class="dm-loader" role="status"><span class="dm-arc" aria-hidden="true"></span><span class="dm-loader-text">Loading...</span></div>';
 
       var query = supabaseClient.from('quotations').select('*').order('created_at', { ascending: false });
       query = (role === 'fabricator') ? query.eq('fabricator_id', uid) : query.eq('customer_id', uid);
       var r = await query;
-      if (r.error) { list.textContent = 'Could not load quotations: ' + r.error.message; return; }
+      if (r.error) { list.textContent = 'Could not load quotations: ' + dmErr(r.error); return; }
       if (!r.data.length) {
         list.innerHTML = role === 'fabricator'
           ? '<div class="empty-state"><div class="empty-icon">\uD83D\uDCCB</div><h3>No quotation requests yet</h3><p>Requests from customers will appear here.</p></div>'

@@ -29,7 +29,7 @@
   <main class="auth-wrap">
     <div class="auth-card wide">
       <h1 class="page-title">Place an Order</h1>
-      <div id="summary" class="dash-card" style="margin:12px 0">Loading...</div>
+      <div id="summary" class="dash-card" style="margin:12px 0"><div class="dm-loader" role="status"><span class="dm-arc" aria-hidden="true"></span><span class="dm-loader-text">Loading...</span></div></div>
       <div id="message" class="message" style="display:none"></div>
 
       <form id="orderForm" style="display:none">
@@ -124,7 +124,7 @@
       });
       setLoading(btn, false, 'Submit Order');
 
-      if (r.error) { showMessage('Could not place order: ' + r.error.message, true); return; }
+      if (r.error) { showMessage('Could not place order: ' + dmErr(r.error), true); return; }
       showMessage('Order placed! Redirecting to your orders...', false);
       setTimeout(function () { window.location.href = 'my-orders.html'; }, 1200);
     });

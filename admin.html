@@ -26,7 +26,7 @@
       <button type="button" data-status="rejected">Rejected</button>
     </div>
     <div id="adminMsg" class="message" style="display:none"></div>
-    <div class="dash-card" id="adList">Loading...</div>
+    <div class="dash-card" id="adList"><div class="dm-loader" role="status"><span class="dm-arc" aria-hidden="true"></span><span class="dm-loader-text">Loading...</span></div></div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4"></script>
@@ -55,14 +55,14 @@
         .from('products')
         .update({ status: status, rejection_reason: reason })
         .eq('id', id);
-      if (r.error) { note('Could not update: ' + r.error.message, true); return; }
+      if (r.error) { note('Could not update: ' + dmErr(r.error), true); return; }
       note('Advertisement ' + status + '.', false);
       loadAds();
     }
 
     async function loadAds() {
       var list = document.getElementById('adList');
-      list.textContent = 'Loading...';
+      list.innerHTML = '<div class="dm-loader" role="status"><span class="dm-arc" aria-hidden="true"></span><span class="dm-loader-text">Loading...</span></div>';
 
       var r = await supabaseClient
         .from('products')
@@ -70,7 +70,7 @@
         .eq('status', currentStatus)
         .order('updated_at', { ascending: false });
 
-      if (r.error) { list.textContent = 'Could not load: ' + r.error.message; return; }
+      if (r.error) { list.textContent = 'Could not load: ' + dmErr(r.error); return; }
       if (r.data.length === 0) { list.textContent = 'No ' + currentStatus + ' advertisements.'; return; }
 
       var ids = r.data.map(function (p) { return p.fabricator_id; });

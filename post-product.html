@@ -257,7 +257,7 @@
       }
       if (res.error) {
         setLoading(btn, false, label);
-        showMessage('Could not save product: ' + res.error.message, true);
+        showMessage('Could not save product: ' + dmErr(res.error), true);
         return;
       }
       productId = res.data.id; // so a retry never creates a duplicate

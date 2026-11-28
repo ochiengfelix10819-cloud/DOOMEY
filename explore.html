@@ -111,7 +111,7 @@
       else query = query.order('created_at', { ascending: false });
 
       var r = await query.limit(60);
-      if (r.error) { grid.textContent = 'Could not load products: ' + r.error.message; return; }
+      if (r.error) { grid.textContent = 'Could not load products: ' + dmErr(r.error); return; }
 
       var ids = r.data.map(function (p) { return p.fabricator_id; });
       var fabs = {};

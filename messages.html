@@ -26,7 +26,7 @@
     <!-- Conversation list -->
     <div id="listView">
       <h2>Messages</h2>
-      <div class="dash-card" id="convList">Loading...</div>
+      <div class="dash-card" id="convList"><div class="dm-loader" role="status"><span class="dm-arc" aria-hidden="true"></span><span class="dm-loader-text">Loading...</span></div></div>
     </div>
 
     <!-- Open conversation -->
@@ -80,7 +80,7 @@
     async function loadConversations() {
       var list = document.getElementById('convList');
       var r = await supabaseClient.rpc('my_conversations');
-      if (r.error) { list.textContent = 'Could not load messages: ' + r.error.message; return; }
+      if (r.error) { list.textContent = 'Could not load messages: ' + dmErr(r.error); return; }
       convs = r.data || [];
       list.innerHTML = '';
       if (!convs.length) {
@@ -134,7 +134,7 @@
         .eq('conversation_id', currentConv)
         .order('created_at', { ascending: true })
         .limit(300);
-      if (r.error) { notice('Could not load messages: ' + r.error.message, true); return; }
+      if (r.error) { notice('Could not load messages: ' + dmErr(r.error), true); return; }
 
       var box = document.getElementById('chatBox');
       if (r.data.length !== lastCount) {
@@ -185,7 +185,7 @@
           if (again.data) { c = again; }
           else {
             btn.disabled = false; btn.textContent = 'Send';
-            notice('Could not start the conversation: ' + c.error.message, true);
+            notice('Could not start the conversation: ' + dmErr(c.error), true);
             return;
           }
         }
@@ -202,7 +202,7 @@
       });
       btn.disabled = false;
       btn.textContent = 'Send';
-      if (m.error) { notice('Could not send: ' + m.error.message, true); return; }
+      if (m.error) { notice('Could not send: ' + dmErr(m.error), true); return; }
 
       document.getElementById('notice').style.display = 'none';
       field.value = '';

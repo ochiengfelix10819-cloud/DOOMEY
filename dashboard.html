@@ -373,7 +373,7 @@
           }
           if (paths.length) { await supabaseClient.storage.from('product-media').remove(paths); }
           var d = await supabaseClient.from('products').delete().eq('id', p.id);
-          if (d.error) { alert('Could not delete: ' + d.error.message); return; }
+          if (d.error) { alert('Could not delete: ' + dmErr(d.error)); return; }
           loadMyAds();
         });
         actions.appendChild(edit);
@@ -503,7 +503,7 @@
 
       if (p.error) {
         setLoading(btn, false, 'Save Profile');
-        showMessage('Could not save phone number: ' + p.error.message, true);
+        showMessage('Could not save phone number: ' + dmErr(p.error), true);
         return;
       }
 
@@ -527,11 +527,11 @@
       setLoading(btn, false, 'Save Profile');
 
       if (result.error) {
-        showMessage('Could not save profile: ' + result.error.message, true);
+        showMessage('Could not save profile: ' + dmErr(result.error), true);
         return;
       }
 
-      var cres = await supabaseClient.from('fabricator_contacts').upsert({ id: currentUserId, whatsapp: whatsapp.replace(/\s/g, '') });       if (cres.error) { showMessage('Could not save WhatsApp number: ' + cres.error.message, true); return; }       currentWhatsapp = whatsapp.replace(/\s/g, '');       currentDetails = result.data;
+      var cres = await supabaseClient.from('fabricator_contacts').upsert({ id: currentUserId, whatsapp: whatsapp.replace(/\s/g, '') });       if (cres.error) { showMessage('Could not save WhatsApp number: ' + dmErr(cres.error), true); return; }       currentWhatsapp = whatsapp.replace(/\s/g, '');       currentDetails = result.data;
       currentProfile.phone = phone.replace(/\s/g, '');
       document.getElementById('message').style.display = 'none';
       showDashboard();
