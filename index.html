@@ -110,7 +110,7 @@
         <h2>Browse Categories</h2>
         <p>Find exactly the metalwork you need</p>
       </div>
-      <div class="grid-3">
+      <div class="grid-3" data-reveal>
        <a href="explore.html?category=gates-and-doors" class="card"><div class="card-img has-photo">🚪<img src="images/categories/gates-and-doors.webp" alt="Gates and Doors" loading="lazy" onerror="this.remove()"></div><div class="card-body"><h3>Gates and Doors</h3><p>Security and decorative gates</p></div></a>
         <a href="explore.html?category=windows-and-grills" class="card"><div class="card-img has-photo">🪟<img src="images/categories/windows-and-grills.webp" alt="Windows and Grills" loading="lazy" onerror="this.remove()"></div><div class="card-body"><h3>Windows and Grills</h3><p>Burglar-proof window grills</p></div></a>
         <a href="explore.html?category=staircases-and-railings" class="card"><div class="card-img has-photo">🪜<img src="images/categories/staircases-and-railings.webp" alt="Staircases and Railings" loading="lazy" onerror="this.remove()"></div><div class="card-body"><h3>Staircases and Railings</h3><p>Stairs, balustrades, handrails</p></div></a>
@@ -329,6 +329,34 @@
 
     loadHome();
     loadFounding();
+  </script>
+  <script>
+    // Category cards grow from a dot to full size, one after another, as they scroll into view
+    (function () {
+      var cards = Array.prototype.slice.call(document.querySelectorAll('[data-reveal] > .card'));
+      if (!cards.length || !('IntersectionObserver' in window)) return;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      cards.forEach(function (c) { c.classList.add('cat-reveal'); });
+      function finish(c) {
+        c.classList.remove('cat-reveal', 'cat-in');
+        c.style.removeProperty('--d');
+      }
+      var io = new IntersectionObserver(function (entries) {
+        var shown = entries.filter(function (e) { return e.isIntersecting; })
+          .sort(function (a, b) { return cards.indexOf(a.target) - cards.indexOf(b.target); });
+        shown.forEach(function (e, i) {
+          var c = e.target;
+          io.unobserve(c);
+          c.style.setProperty('--d', (i * 120) + 'ms');
+          requestAnimationFrame(function () { c.classList.add('cat-in'); });
+          var done = false;
+          function end() { if (!done) { done = true; finish(c); } }
+          c.addEventListener('transitionend', function (ev) { if (ev.target === c && ev.propertyName === 'clip-path') end(); });
+          setTimeout(end, i * 120 + 1500);
+        });
+      }, { threshold: 0, rootMargin: '0px 0px -6% 0px' });
+      cards.forEach(function (c) { io.observe(c); });
+    })();
   </script>
   <script src="bot.js"></script>
 </body>

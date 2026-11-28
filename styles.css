@@ -840,3 +840,8 @@ h1.page-title { font-size: 1.5em; margin: 0.83em 0; }
 .completion-action { appearance: none; background: none; border: 0; padding: 0; font: inherit; font-weight: 600; color: #8a3f0f; text-decoration: underline; cursor: pointer; }
 @media (prefers-reduced-motion: reduce) { .completion-bar span { transition: none; } }
 .completion h3 { color: #8a3f0f; }
+
+/* Category cards: grow from a dot as they scroll into view (classes are added by a script on the homepage) */
+.cat-reveal { opacity: 0; transform: scale(0.12); clip-path: circle(3% at 50% 50%); transition: opacity 0.5s ease, transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1), clip-path 0.9s cubic-bezier(0.2, 0.8, 0.2, 1); transition-delay: var(--d, 0ms); will-change: transform, clip-path, opacity; }
+.cat-reveal.cat-in { opacity: 1; transform: none; clip-path: circle(80% at 50% 50%); }
+@media (prefers-reduced-motion: reduce) { .cat-reveal { opacity: 1; transform: none; clip-path: none; transition: none; } }
